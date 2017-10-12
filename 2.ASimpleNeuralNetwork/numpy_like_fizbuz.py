@@ -19,7 +19,7 @@
 ###########################################################################
 ###########################################################################
 
-import torch as th
+import torch
 from torch.autograd import Variable
 
 from dataset import get_data, decoder, check_fizbuz
@@ -32,19 +32,19 @@ lr = 0.01
 
 
 trX, trY, teX, teY = get_data(input_size)
-if th.cuda.is_available():
-    dtype = th.cuda.FloatTensor
+if torch.cuda.is_available():
+    dtype = torch.cuda.FloatTensor
 else:
-    dtype = th.FloatTensor
-x = Variable(th.from_numpy(trX).type(dtype), requires_grad=False)
-y = Variable(th.from_numpy(trY).type(dtype), requires_grad=False)
+    dtype = torch.FloatTensor
+x = Variable(torch.from_numpy(trX).type(dtype), requires_grad=False)
+y = Variable(torch.from_numpy(trY).type(dtype), requires_grad=False)
 
 
-w1 = Variable(th.randn(10, 100).type(dtype), requires_grad=True)
-w2 = Variable(th.randn(100, 4).type(dtype), requires_grad=True)
+w1 = Variable(torch.randn(10, 100).type(dtype), requires_grad=True)
+w2 = Variable(torch.randn(100, 4).type(dtype), requires_grad=True)
 
-b1 = Variable(th.zeros(1, 100).type(dtype), requires_grad=True)
-b2 = Variable(th.zeros(1, 4).type(dtype), requires_grad=True)
+b1 = Variable(torch.zeros(1, 100).type(dtype), requires_grad=True)
+b2 = Variable(torch.zeros(1, 4).type(dtype), requires_grad=True)
 
 no_of_batches = int(len(trX) / batches)
 for epoch in range(epochs):
@@ -78,8 +78,8 @@ for epoch in range(epochs):
 
 
 # test
-x = Variable(th.from_numpy(teX).type(dtype), requires_grad=False)
-y = Variable(th.from_numpy(teY).type(dtype), requires_grad=False)
+x = Variable(torch.from_numpy(teX).type(dtype), requires_grad=False)
+y = Variable(torch.from_numpy(teY).type(dtype), requires_grad=False)
 
 a2 = x.matmul(w1)
 a2 = a2.add(b1)
