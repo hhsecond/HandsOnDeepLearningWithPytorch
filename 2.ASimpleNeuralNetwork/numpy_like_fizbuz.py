@@ -63,8 +63,8 @@ for epoch in range(epochs):
         hyp = a3.sigmoid()
 
         error = hyp - y_
-        loss = error.pow(2).sum() / 2.0
-        loss.backward()
+        output = error.pow(2).sum() / 2.0
+        output.backward()
 
         w1.data -= lr * w1.grad.data
         w2.data -= lr * w2.grad.data
@@ -74,7 +74,7 @@ for epoch in range(epochs):
         w2.grad.data.zero_()
         b1.grad.data.zero_()
         b2.grad.data.zero_()
-    print(epoch, loss.data[0])
+    print(epoch, output.data[0])
 
 
 # test
@@ -89,11 +89,11 @@ a3 = h2.matmul(w2)
 a3 = a3.add(b2)
 hyp = a3.sigmoid()
 error = hyp - y
-loss = error.pow(2).sum() / 2.
+output = error.pow(2).sum() / 2.
 outli = ['fizbuz', 'buz', 'fiz', 'number']
 for i in range(len(teX)):
     num = decoder(teX[i])
     print(
         'Number: {} -- Actual: {} -- Prediction: {}'.format(
             num, check_fizbuz(num), outli[hyp[i].data.max(0)[1][0]]))
-print('Test loss: ', loss.data[0])
+print('Test loss: ', output.data[0])
