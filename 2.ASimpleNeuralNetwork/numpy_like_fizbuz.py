@@ -39,7 +39,6 @@ else:
 x = Variable(torch.from_numpy(trX).type(dtype), requires_grad=False)
 y = Variable(torch.from_numpy(trY).type(dtype), requires_grad=False)
 
-
 w1 = Variable(torch.randn(10, 100).type(dtype), requires_grad=True)
 w2 = Variable(torch.randn(100, 4).type(dtype), requires_grad=True)
 
@@ -74,12 +73,13 @@ for epoch in range(epochs):
         w2.grad.data.zero_()
         b1.grad.data.zero_()
         b2.grad.data.zero_()
-    print(epoch, output.data[0])
+    if epoch % 10:
+        print(epoch, output.data[0])
 
 
 # test
-x = Variable(torch.from_numpy(teX).type(dtype), requires_grad=False)
-y = Variable(torch.from_numpy(teY).type(dtype), requires_grad=False)
+x = Variable(torch.from_numpy(teX).type(dtype), volatile=True)
+y = Variable(torch.from_numpy(teY).type(dtype), volatile=True)
 
 a2 = x.matmul(w1)
 a2 = a2.add(b1)
@@ -96,4 +96,6 @@ for i in range(len(teX)):
     print(
         'Number: {} -- Actual: {} -- Prediction: {}'.format(
             num, check_fizbuz(num), outli[hyp[i].data.max(0)[1][0]]))
-print('Test loss: ', output.data[0])
+print('Test loss: ', output.data[0] / len(x))
+accuracy = hyp.data.max(1)[1] == y.data.max(1)[1]
+print('accuracy: ', accuracy.sum() / len(accuracy))
