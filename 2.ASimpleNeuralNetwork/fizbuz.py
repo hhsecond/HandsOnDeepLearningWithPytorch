@@ -1,3 +1,24 @@
+##########################################################################
+##########################################################################
+# Author: Sherin Thomas
+# PyTorch Version 0.2
+# Program for predicting the next number whether its a
+# fiz or buz or fizbuz
+# The original post written the idea of fizbuz in neural network:
+#       http://joelgrus.com/2016/05/23/fizz-buzz-in-tensorflow/
+#
+#
+#
+# incase you haven't played this game, you had the worst childhood,
+# but don't worry, here are the rules.
+#
+# number divisible by 3 is fiz
+# number divisible by 5 is buz
+# number divisible by both 3 and 5 is fizbuz
+# other numbers should be considered as that number itself
+###########################################################################
+###########################################################################
+
 import torch
 from torch.autograd import Variable
 from torch import nn
@@ -8,7 +29,7 @@ from dataset import get_data, decoder, check_fizbuz
 
 
 input_size = 10
-epochs = 2000
+epochs = 500
 batches = 64
 lr = 0.01
 
@@ -43,8 +64,9 @@ x = Variable(torch.from_numpy(trX).type(dtype), requires_grad=False)
 y = Variable(torch.from_numpy(trY).type(dtype), requires_grad=False)
 
 net = FizBuzNet(input_size, 4)
+
 loss = nn.MSELoss()
-optimizer = optim.SGD(net.parameters(), lr=lr)
+optimizer = optim.Adam(net.parameters(), lr=lr)
 
 no_of_batches = int(len(trX) / batches)
 for epoch in range(epochs):
@@ -58,12 +80,13 @@ for epoch in range(epochs):
         output = loss(hyp, y_)
         output.backward()
         optimizer.step()
+    if epoch % 10:
         print(epoch, output.data[0])
 
 
 # Test
-x = Variable(torch.from_numpy(teX).type(dtype), requires_grad=False)
-y = Variable(torch.from_numpy(teY).type(dtype), requires_grad=False)
+x = Variable(torch.from_numpy(teX).type(dtype), volatile=True)
+y = Variable(torch.from_numpy(teY).type(dtype), volatile=True)
 hyp = net(x)
 output = loss(hyp, y)
 outli = ['fizbuz', 'buz', 'fiz', 'number']
@@ -72,4 +95,6 @@ for i in range(len(teX)):
     print(
         'Number: {} -- Actual: {} -- Prediction: {}'.format(
             num, check_fizbuz(num), outli[hyp[i].data.max(0)[1][0]]))
-print('Test loss: ', loss.data[0])
+print('Test loss: ', output.data[0] / len(x))
+accuracy = hyp.data.max(1)[1] == y.data.max(1)[1]
+print('accuracy: ', accuracy.sum() / len(accuracy))
