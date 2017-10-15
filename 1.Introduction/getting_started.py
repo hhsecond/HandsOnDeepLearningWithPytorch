@@ -24,7 +24,21 @@ print(shape[1])
 
 # Operations
 x = torch.ones(3, 2)
+
+# normal operators
 y = torch.ones(3, 2) * 2
+y = y + 2
+z = torch.ones(2, 1)
+# x -> 3x2
+# y -> 3x2
+# z -> 2x1
+x_y = x * y  # element wise mul -> 3x2
+x_y_z = x_y @ z  # matrix multiplication, (3x2) . (2x1) -> a scalar
+print(x)
+print(y)
+print(z)
+print(x_y)
+print(x_y_z)
 
 # Addition 1 + 2 > 3
 z = x + y  # using operators
