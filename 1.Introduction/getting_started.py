@@ -33,7 +33,7 @@ z = torch.ones(2, 1)
 # y -> 3x2
 # z -> 2x1
 x_y = x * y  # element wise mul -> 3x2
-x_y_z = x_y @ z  # matrix multiplication, (3x2) . (2x1) -> a scalar
+x_y_z = x_y @ z  # matrix multiplication, (3x2) . (2x1) -> a 3x1 matrix
 print(x)
 print(y)
 print(z)
