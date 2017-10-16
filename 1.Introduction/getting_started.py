@@ -61,6 +61,11 @@ x = torch.rand(2, 3)
 print(x.numel())
 
 # Slicing, joining, indexing and mutating
+# pythonic indexing
+x = torch.rand(2, 3, 4)
+x_with_2n3_dimension = x[1, :, :]
+scalar_x = x[1, 1, 1]  # first value from each dimension
+
 # numpy like slicing
 x = torch.rand(2, 3)
 print(x[:, 1:])  # skipping first column
