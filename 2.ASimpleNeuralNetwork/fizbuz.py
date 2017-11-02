@@ -25,8 +25,7 @@ from torch import nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-from dataset import get_data, decoder, check_fizbuz
-
+from datautils import get_data, decoder, check_fizbuz
 
 input_size = 10
 epochs = 500
