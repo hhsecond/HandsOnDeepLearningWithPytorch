@@ -38,20 +38,21 @@ if torch.cuda.is_available():
     dtype = torch.cuda.FloatTensor
 else:
     dtype = torch.FloatTensor
+
 x = torch.from_numpy(trX).type(dtype)
-Variable(x, requires_grad=False)
+x = Variable(x, requires_grad=False)
 y = torch.from_numpy(trY).type(dtype)
-Variable(y, requires_grad=False)
+y = Variable(y, requires_grad=False)
 
 w1 = torch.randn(input_size, hidden_units).type(dtype)
-Variable(w1, requires_grad=True)
+w1 = Variable(w1, requires_grad=True)
 w2 = torch.randn(hidden_units, output_size).type(dtype)
-Variable(w2, requires_grad=True)
+w2 = Variable(w2, requires_grad=True)
 
 b1 = torch.zeros(1, hidden_units).type(dtype)
-Variable(b1, requires_grad=True)
+b1 = Variable(b1, requires_grad=True)
 b2 = torch.zeros(1, output_size).type(dtype)
-Variable(b2, requires_grad=True)
+b2 = Variable(b2, requires_grad=True)
 
 no_of_batches = int(len(trX) / batches)
 for epoch in range(epochs):
