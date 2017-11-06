@@ -45,6 +45,7 @@ y = torch.from_numpy(trY).type(dtype)
 y = Variable(y, requires_grad=False)
 
 print(x.grad, x.grad_fn, x.data)
+# None, None, [torch.FloatTensor of size 900x10]
 
 w1 = torch.randn(input_size, hidden_units).type(dtype)
 w1 = Variable(w1, requires_grad=True)
@@ -52,6 +53,7 @@ w2 = torch.randn(hidden_units, output_size).type(dtype)
 w2 = Variable(w2, requires_grad=True)
 
 print(w1.grad, w1.grad_fn, w1.data)
+# None, None, [torch.FloatTensor of size 10x100]
 
 b1 = torch.zeros(1, hidden_units).type(dtype)
 b1 = Variable(b1, requires_grad=True)
@@ -69,6 +71,7 @@ for epoch in range(epochs):
         a2 = x_.matmul(w1)
 
         print(a2.grad, a2.grad_fn, a2.data)
+        # None, <MmBackward object at 0x7f385f472240>, [torch.FloatTensor of size 64x100]x
 
         a2 = a2.add(b1)
         h2 = a2.sigmoid()
@@ -80,6 +83,13 @@ for epoch in range(epochs):
         error = hyp - y_
         output = error.pow(2).sum() / 2.0
         output.backward()
+
+        print(x.grad, x.grad_fn, x.data)
+        # None, None, [torch.FloatTensor of size 900x10]
+        print(w1.grad, w1.grad_fn, w1.data)
+        # [torch.FloatTensor of size 10x100], None, [torch.FloatTensor of size 10x100]
+        print(a2.grad, a2.grad_fn, a2.data)
+        # None, <AddBackward1 object at 0x7fedcd24f048>, [torch.FloatTensor of size 64x100]
 
         w1.data -= lr * w1.grad.data
         w2.data -= lr * w2.grad.data
