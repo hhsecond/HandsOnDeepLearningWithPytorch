@@ -22,7 +22,7 @@
 import torch
 from torch.autograd import Variable
 
-from dataset import get_data, decoder, check_fizbuz
+from datautils import get_data, decoder, check_fizbuz
 
 
 input_size = 10
@@ -44,10 +44,14 @@ x = Variable(x, requires_grad=False)
 y = torch.from_numpy(trY).type(dtype)
 y = Variable(y, requires_grad=False)
 
+print(x.grad, x.grad_fn, x.data)
+
 w1 = torch.randn(input_size, hidden_units).type(dtype)
 w1 = Variable(w1, requires_grad=True)
 w2 = torch.randn(hidden_units, output_size).type(dtype)
 w2 = Variable(w2, requires_grad=True)
+
+print(w1.grad, w1.grad_fn, w1.data)
 
 b1 = torch.zeros(1, hidden_units).type(dtype)
 b1 = Variable(b1, requires_grad=True)
@@ -63,6 +67,9 @@ for epoch in range(epochs):
         y_ = y[start:end]
 
         a2 = x_.matmul(w1)
+
+        print(a2.grad, a2.grad_fn, a2.data)
+
         a2 = a2.add(b1)
         h2 = a2.sigmoid()
 
