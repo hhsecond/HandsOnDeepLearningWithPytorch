@@ -69,11 +69,11 @@ for epoch in range(epochs):
         y_ = y[start:end]
 
         a2 = x_.matmul(w1)
+        a2 = a2.add(b1)
 
         print(a2.grad, a2.grad_fn, a2.data)
-        # None, <MmBackward object at 0x7f385f472240>, [torch.FloatTensor of size 64x100]x
+        # None, <AddBackward1 object at 0x7fe4fb786208>, [torch.FloatTensor of size 64x100]
 
-        a2 = a2.add(b1)
         h2 = a2.sigmoid()
 
         a3 = h2.matmul(w2)
