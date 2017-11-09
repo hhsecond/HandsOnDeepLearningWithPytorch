@@ -28,7 +28,7 @@ from datautils import get_data, decoder, check_fizbuz
 input_size = 10
 output_size = 4
 hidden_units = 100
-epochs = 2000
+epochs = 1
 batches = 64
 lr = 0.01
 
@@ -101,6 +101,13 @@ for epoch in range(epochs):
         b2.grad.data.zero_()
     if epoch % 10:
         print(epoch, output.data[0])
+# traversing the graph using .grad_fn
+print(output.grad_fn)
+# <DivBackward0 object at 0x7eff00ae3ef0>
+print(output.grad_fn.next_functions[0][0])
+# <SumBackward0 object at 0x7eff017b4128>
+print(output.grad_fn.next_functions[0][0].next_functions[0][0])
+# <PowBackward0 object at 0x7eff017b4128>
 
 
 # test
