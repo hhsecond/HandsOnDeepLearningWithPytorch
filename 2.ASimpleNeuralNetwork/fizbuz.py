@@ -63,7 +63,6 @@ x = Variable(torch.from_numpy(trX).type(dtype), requires_grad=False)
 y = Variable(torch.from_numpy(trY).type(dtype), requires_grad=False)
 
 net = FizBuzNet(input_size, 4)
-
 loss = nn.MSELoss()
 optimizer = optim.Adam(net.parameters(), lr=lr)
 
