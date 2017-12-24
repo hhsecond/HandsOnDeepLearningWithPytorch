@@ -8,6 +8,7 @@ name = "pypi"
 [packages]
 
 "4f39215" = {path = "/home/hhsecond/mypro/pytorch", editable = true}
+torchvision = "*"
 
 
 [dev-packages]
