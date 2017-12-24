@@ -111,24 +111,25 @@ print(output.grad_fn.next_functions[0][0].next_functions[0][0])
 
 
 # test
-x = Variable(torch.from_numpy(teX).type(dtype), volatile=True)
-y = Variable(torch.from_numpy(teY).type(dtype), volatile=True)
+with torch.no_grad():
+    x = Variable(torch.from_numpy(teX).type(dtype))
+    y = Variable(torch.from_numpy(teY).type(dtype))
 
-a2 = x.matmul(w1)
-a2 = a2.add(b1)
-h2 = a2.sigmoid()
+    a2 = x.matmul(w1)
+    a2 = a2.add(b1)
+    h2 = a2.sigmoid()
 
-a3 = h2.matmul(w2)
-a3 = a3.add(b2)
-hyp = a3.sigmoid()
-error = hyp - y
-output = error.pow(2).sum() / 2.
-outli = ['fizbuz', 'buz', 'fiz', 'number']
-for i in range(len(teX)):
-    num = decoder(teX[i])
-    print(
-        'Number: {} -- Actual: {} -- Prediction: {}'.format(
-            num, check_fizbuz(num), outli[hyp[i].data.max(0)[1][0]]))
-print('Test loss: ', output.data[0] / len(x))
-accuracy = hyp.data.max(1)[1] == y.data.max(1)[1]
-print('accuracy: ', accuracy.sum() / len(accuracy))
+    a3 = h2.matmul(w2)
+    a3 = a3.add(b2)
+    hyp = a3.sigmoid()
+    error = hyp - y
+    output = error.pow(2).sum() / 2.
+    outli = ['fizbuz', 'buz', 'fiz', 'number']
+    for i in range(len(teX)):
+        num = decoder(teX[i])
+        print(
+            'Number: {} -- Actual: {} -- Prediction: {}'.format(
+                num, check_fizbuz(num), outli[hyp[i].data.max(0)[1][0]]))
+    print('Test loss: ', output.data[0] / len(x))
+    accuracy = hyp.data.max(1)[1] == y.data.max(1)[1]
+    print('accuracy: ', accuracy.sum() / len(accuracy))
