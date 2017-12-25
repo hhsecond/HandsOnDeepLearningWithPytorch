@@ -64,7 +64,7 @@ class MaxPool(nn.Module):
         if height != width:
             raise Exception('Only processing square Image')
         if height % self.kernel_size != 0:
-            raise Exception('Keranl cannot be moved completely, change Kernal size')
+            raise Exception('Kernal cannot be moved completely, change Kernal size')
         out = Variable(torch.zeros(batch_size, depth, new_height, new_width))
         for h in range(new_height):
             for w in range(new_width):
