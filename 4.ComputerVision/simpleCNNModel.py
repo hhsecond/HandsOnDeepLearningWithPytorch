@@ -13,11 +13,11 @@ class Conv(nn.Module):
 
     def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0):
         super().__init__()
-        self.filters = []
         self.kernel_size = kernel_size
         self.stride = stride
         self.padding = padding
-        self.filters = Parameter(torch.Tensor(out_channels, in_channels, kernel_size, kernel_size))
+        self.weight = Parameter(torch.Tensor(out_channels, in_channels, kernel_size, kernel_size))
+        self.bias = Parameter(torch.zeros(out_channels))
 
     def forward(self, x):
         # expected size = batch x depth x height x width
@@ -26,7 +26,7 @@ class Conv(nn.Module):
         batch_size = x.size(0)
         height = x.size(2)
         width = x.size(3)
-        new_depth = self.filters.size(0)  # out channels
+        new_depth = self.weight.size(0)  # out channels
         new_height = int(((height - self.kernel_size) / self.stride) + 1)
         new_width = int(((width - self.kernel_size) / self.stride) + 1)
         if height != width:
@@ -34,11 +34,12 @@ class Conv(nn.Module):
         # TODO - check whether this converts to cuda tensor if you call .cuda()
         out = Variable(torch.zeros(batch_size, new_depth, new_height, new_width))
         padded_input = F.pad(x, (self.padding,) * 4)
-        for nf, f in enumerate(self.filters):
+        for nf, f in enumerate(self.weight):
             for h in range(new_height):
                 for w in range(new_width):
                     val = padded_input[:, :, h:h + self.kernel_size, w:w + self.kernel_size]
                     out[:, nf, h, w] = val.contiguous().view(batch_size, -1) @ f.view(-1)
+                    out[:, nf, h, w] += self.bias[nf]
         return out
 
 
