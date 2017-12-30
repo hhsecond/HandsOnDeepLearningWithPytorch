@@ -23,15 +23,21 @@ Chapters
 
 Utilities
 ---------
-* Visualization is handled by Lucent - :: pip install lucent
-* Environment is handled by Pipenv - :: pip install pipenv
+* Visualization is handled by Lucent - ::
+
+    pip install lucent
+* Environment is handled by Pipenv - ::
+
+    pip install pipenv
 
 Usage
 -----
 * Clone the repository
 ``git clone https://github.com/hhsecond/ThePyTorchBook.git && cd ThePyTorchBook``
+
 * Install dependancies. ThePyTorchBook is using python3.6 and pipenv for package management
 ``pipenv install``
+
 * CD to chapter directores and execute the models
 
 
