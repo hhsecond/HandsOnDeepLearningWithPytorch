@@ -32,11 +32,13 @@ Utilities
 
 Usage
 -----
-* Clone the repository
-``git clone https://github.com/hhsecond/ThePyTorchBook.git && cd ThePyTorchBook``
+* Clone the repository ::
 
-* Install dependancies. ThePyTorchBook is using python3.6 and pipenv for package management
-``pipenv install``
+    git clone https://github.com/hhsecond/ThePyTorchBook.git && cd ThePyTorchBook
+
+* Install dependancies. ThePyTorchBook is using python3.6 and pipenv for package management ::
+
+    pipenv install
 
 * CD to chapter directores and execute the models
 
