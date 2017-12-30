@@ -2,8 +2,8 @@
 ThePyTorchBook
 **************
 
-Code used in the book - ThePyTorchBook, from Packt Publications
-===============================================================
+Code used in the book - ThePyTorchBook
+======================================
 
 #. Introduction
 #. A Simple Neural Network
