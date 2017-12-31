@@ -8,5 +8,6 @@ class SegmentationModel(nn.Module):
     https://github.com/meetshah1995/pytorch-semseg
     """
 
-    def __init__(self):
-        pass
+    def __init__(self, n_classes=21):
+        super().__init__()
+
