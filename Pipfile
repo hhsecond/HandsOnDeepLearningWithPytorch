@@ -9,6 +9,8 @@ name = "pypi"
 
 "4f39215" = {path = "/home/hhsecond/mypro/pytorch", editable = true}
 torchvision = "*"
+scipy = "*"
+matplotlib = "*"
 
 
 [dev-packages]
