@@ -17,12 +17,17 @@ I used different dataset for different models. ``Cfar-10`` has been used for sim
 
 Citations
 ---------
-**Camvid**
-Segmentation and Recognition Using Structure from Motion Point Clouds, ECCV 2008 (pdf)
-Brostow, Shotton, Fauqueur, Cipolla (bibtex)
+**Camvid** `Bibtex`_ (Other links seem to be broken)
 
-Semantic Object Classes in Video: A High-Definition Ground Truth Database (pdf)
-Pattern Recognition Letters (to appear)
-Brostow, Fauqueur, Cipolla (bibtex)
+.. _Bibtex: http://www0.cs.ucl.ac.uk/staff/G.Brostow/bibs/RecognitionFromMotion_bib.html
+
+(1)
+Segmentation and Recognition Using Structure from Motion Point Clouds, ECCV 2008
+Brostow, Shotton, Fauqueur, Cipolla
+
+(2)
+Semantic Object Classes in Video: A High-Definition Ground Truth Database
+Pattern Recognition Letters
+Brostow, Fauqueur, Cipolla
 
 .. _official Website: http://mi.eng.cam.ac.uk/research/projects/VideoRec/CamVid/
