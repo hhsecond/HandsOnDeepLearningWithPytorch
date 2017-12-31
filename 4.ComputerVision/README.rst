@@ -10,7 +10,10 @@ Models
 
 Datasets Used
 -------------
-I used different dataset for different models. ``Cfar-10`` has been used for simpleCNN which is part of ``torchvision`` models. The script automatically downloads the dataset. ``Camvid`` has been used for semantic segmentation which has been downloaded from `official Website`_ and kept it in ``data`` folder arranged in ``train``, ``test`` and ``val`` folders.
+I used different dataset for different models. ``Cfar-10`` has been used for simpleCNN which is part of ``torchvision`` models. The script automatically downloads the dataset. ``Camvid`` has been used for semantic segmentation which has been downloaded from `official Website`_ and kept it in `box`_ under the folder camvid
+
+.. _box: https://app.box.com/s/25ict2irqaz3nnd19qp8ymtmkwx3l61j
+
 
 Citations
 ---------
