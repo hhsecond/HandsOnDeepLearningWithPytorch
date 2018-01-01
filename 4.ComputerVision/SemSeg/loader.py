@@ -2,7 +2,7 @@ import os
 
 import torch
 from torch.utils import data
-import scipy.misc as m
+from scipy import misc
 from torchvision import transforms
 
 
@@ -39,8 +39,8 @@ class CamvidLoader(data.Dataset):
         return len(self.files)
 
     def __getitem__(self, index):
-        img = m.imread(self.files[index]['input'])
-        lbl = m.imread(self.files[index]['label'])
+        img = misc.imread(self.files[index]['input'])
+        lbl = misc.imread(self.files[index]['label'])
         return self.process(img, lbl)
 
     def process(self, img, lbl):
@@ -55,4 +55,3 @@ if __name__ == '__main__':
     loader = CamvidLoader('train')
     # TODO - Do it by using Lucent
     transforms.ToPILImage('RGB')(loader[1][1].byte()).save('image.png')
-    loader.decode_segmap(loader[1][1].transpose(0, 2).numpy())
