@@ -6,14 +6,14 @@ from scipy import misc
 from torchvision import transforms
 
 
-class CamvidLoader(data.Dataset):
+class CamvidDataSet(data.Dataset):
     """
     CamVid dataset Loader
     Note:
         Labels loads only pedestrian
     """
 
-    def __init__(self, split, path='ThePyTorchBookDataSet/camvid/'):
+    def __init__(self, split, path):
         inputdir_path = os.path.join(path, split)
         labledir_path = os.path.join(inputdir_path, 'labels')
         input_files = os.listdir(inputdir_path)
@@ -47,7 +47,7 @@ class CamvidLoader(data.Dataset):
         """ converts input numpy image to torch tensor and normalize """
         # TODO - load cuda tensor if cuda_is_avialable
         img = self.transform(img)
-        lbl = torch.from_numpy(lbl).transpose(0, 2).long()
+        lbl = torch.from_numpy(lbl).long()
         return img, lbl
 
 
