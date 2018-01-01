@@ -7,13 +7,18 @@ import torchvision.transforms as transforms
 from simpleCNNModel import SimpleCNNModel
 
 
-###############
-# things to write
-# Convolution
-# 1x1 conv > dim reduction, equivalence with fc
-# stride > down sampling
-# pool > down sampling (But trends are prefering strides over pooling), max, min, average
-###############
+"""
+things to write
+Convolution
+deconvolution - https://distill.pub/2016/deconv-checkerboard/
+How convoution arithmetic work
+1x1 conv > dim reduction, equivalence with fc
+stride > down sampling
+pool > down sampling (But trends are prefering strides over pooling)
+average pooling
+max pooling
+min pooling
+"""
 
 
 def get_data():
