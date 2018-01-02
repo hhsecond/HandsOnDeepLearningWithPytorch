@@ -14,15 +14,15 @@ class SegmentationModel(nn.Module):
             ConvBlock(inp=3, out=64, kernal=7, stride=2, pad=3, bias=False),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
 
-        self.encoder1 = EncoderBlock()
-        self.encoder2 = EncoderBlock()
-        self.encoder3 = EncoderBlock()
-        self.encoder4 = EncoderBlock()
+        self.encoder1 = EncoderBlock(inp=64, out=64, downsample=False)
+        self.encoder2 = EncoderBlock(inp=64, out=128, downsample=True)
+        self.encoder3 = EncoderBlock(inp=128, out=256, downsample=True)
+        self.encoder4 = EncoderBlock(inp=256, out=512, downsample=True)
 
-        self.decoder4 = DecoderBlock()
-        self.decoder3 = DecoderBlock()
-        self.decoder2 = DecoderBlock()
-        self.decoder1 = DecoderBlock()
+        self.decoder4 = DecoderBlock(inp=512, out=256)
+        self.decoder3 = DecoderBlock(inp=256, out=128)
+        self.decoder2 = DecoderBlock(inp=128, out=64)
+        self.decoder1 = DecoderBlock(inp=64, out=64)
 
         self.final_block = nn.Sequential(
             DeconvBlock(inp=64, out=32, kernal=3, stride=2, pad=1),
@@ -35,10 +35,16 @@ class SegmentationModel(nn.Module):
 
 
 class EncoderBlock(nn.Module):
-    """ Residucal Block in linknet that does Encoding """
+    """ Residucal Block in linknet that does Encoding - layers in ResNet18 """
 
-    def __init__(self):
+    def __init__(self, inp, out, downsample):
+        """
+        Resnet18 has first layer without downsampling.
+        The parameter ``downsampling`` decides that
+        """
         super().__init__()
+        self.residue1
+        self.residue2
 
     def forward(self, x):
         pass
@@ -47,7 +53,7 @@ class EncoderBlock(nn.Module):
 class DecoderBlock(nn.Module):
     """ Residucal Block in linknet that does Encoding """
 
-    def __init__(self):
+    def __init__(self, inp, out):
         super().__init__()
 
     def forward(self, x):
