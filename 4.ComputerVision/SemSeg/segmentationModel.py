@@ -11,7 +11,7 @@ class SegmentationModel(nn.Module):
     def __init__(self):
         super().__init__()
         self.initial_block = nn.Sequential(
-            ConvBlock(inp=3, out=64, kernal=7, stride=2, pad=3, bias=False),
+            ConvBlock(inp=3, out=64, kernal=7, stride=2, pad=3, bias=False, act=True),
             nn.MaxPool2d(kernel_size=3, stride=2, padding=1))
 
         self.encoder1 = EncoderBlock(inp=64, out=64, downsample=False)
@@ -26,12 +26,16 @@ class SegmentationModel(nn.Module):
 
         self.final_block = nn.Sequential(
             DeconvBlock(inp=64, out=32, kernal=3, stride=2, pad=1),
-            ConvBlock(inp=32, out=32, kernal=3, stride=1, pad=1, bias=True),
+            ConvBlock(inp=32, out=32, kernal=3, stride=1, pad=1, bias=True, act=True),
             DeconvBlock(inp=32, out=1, kernal=2, stride=2, pad=0))
 
     def forward(self, x):
         start = self.initial_block(x)
-        return start
+        e1 = self.encoder1(start)
+        e2 = self.encoder2(e1)
+        e3 = self.encoder3(e2)
+        e4 = self.encoder4(e3)
+        return e4
 
 
 class EncoderBlock(nn.Module):
@@ -41,13 +45,33 @@ class EncoderBlock(nn.Module):
         """
         Resnet18 has first layer without downsampling.
         The parameter ``downsampling`` decides that
+        # TODO - mention about how n - f/s + 1 is handling output size in
+        # in downsample
         """
         super().__init__()
-        self.residue1
-        self.residue2
+        self.downsample = downsample
+        if self.downsample:
+            self.block1 = nn.Sequential(
+                ConvBlock(inp=inp, out=out, kernal=3, stride=2, pad=1, bias=False, act=True),
+                ConvBlock(inp=out, out=out, kernal=3, stride=1, pad=1, bias=False, act=False))
+            self.residue = ConvBlock(
+                inp=inp, out=out, kernal=1, stride=2, pad=0, bias=False, act=False)
+        else:
+            self.block1 = nn.Sequential(
+                ConvBlock(inp=inp, out=out, kernal=3, stride=1, pad=1, bias=False, act=True),
+                ConvBlock(inp=out, out=out, kernal=3, stride=1, pad=1, bias=False, act=False))
+        self.block2 = nn.Sequential(
+            ConvBlock(inp=out, out=out, kernal=3, stride=1, pad=1, bias=False, act=True),
+            ConvBlock(inp=out, out=out, kernal=3, stride=1, pad=1, bias=False, act=False))
 
     def forward(self, x):
-        pass
+        out1 = self.block1(x)
+        if self.downsample:
+            residue = self.residue(x)
+            out2 = self.block2(out1 + residue)
+        else:
+            out2 = self.block2(out1 + x)
+        return out2 + out1
 
 
 class DecoderBlock(nn.Module):
@@ -63,12 +87,17 @@ class DecoderBlock(nn.Module):
 class ConvBlock(nn.Module):
     """ LinkNet uses initial block with conv -> batchnorm -> relu """
 
-    def __init__(self, inp, out, kernal, stride, pad, bias):
+    def __init__(self, inp, out, kernal, stride, pad, bias, act):
         super().__init__()
-        self.conv_block = nn.Sequential(
-            nn.Conv2d(inp, out, kernal, stride, pad, bias=bias),
-            nn.BatchNorm2d(num_features=out),
-            nn.ReLU(inplace=True))
+        if act:
+            self.conv_block = nn.Sequential(
+                nn.Conv2d(inp, out, kernal, stride, pad, bias=bias),
+                nn.BatchNorm2d(num_features=out),
+                nn.ReLU())
+        else:
+            self.conv_block = nn.Sequential(
+                nn.Conv2d(inp, out, kernal, stride, pad, bias=bias),
+                nn.BatchNorm2d(num_features=out))
 
     def forward(self, x):
         return self.conv_block(x)
