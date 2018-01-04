@@ -4,7 +4,6 @@ import torch
 from torch.utils import data
 from scipy import misc
 from torchvision import transforms
-from torch.autograd import Variable
 
 
 class CamvidDataSet(data.Dataset):
@@ -49,10 +48,10 @@ class CamvidDataSet(data.Dataset):
         # TODO - load cuda tensor if cuda_is_avialable
         img = self.transform(img)
         lbl = torch.from_numpy(lbl).long()
-        return Variable(img), Variable(lbl)
+        return img, lbl
 
 
 if __name__ == '__main__':
-    loader = CamvidLoader('train')
+    loader = CamvidDataSet('train')
     # TODO - Do it by using Lucent
     transforms.ToPILImage('RGB')(loader[1][1].byte()).save('image.png')
