@@ -4,6 +4,7 @@ import torch
 from torch.utils import data
 from scipy import misc
 from torchvision import transforms
+from torch.autograd import Variable
 
 
 class CamvidDataSet(data.Dataset):
@@ -48,7 +49,7 @@ class CamvidDataSet(data.Dataset):
         # TODO - load cuda tensor if cuda_is_avialable
         img = self.transform(img)
         lbl = torch.from_numpy(lbl).long()
-        return img, lbl
+        return Variable(img), Variable(lbl)
 
 
 if __name__ == '__main__':
