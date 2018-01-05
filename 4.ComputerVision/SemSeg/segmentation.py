@@ -21,8 +21,9 @@ net.train()
 # Training
 path = '/home/hhsecond/mypro/ThePyTorchBook/ThePyTorchBookDataSet/camvid'
 epochs = 64
+bsize = 2
 dataset = CamvidDataSet('train', path)
-loader = data.DataLoader(dataset, batch_size=5, num_workers=4, shuffle=True)
+loader = data.DataLoader(dataset, batch_size=bsize, num_workers=4, shuffle=True)
 optimizer = torch.optim.Adam(net.parameters())
 loss_fn = nn.NLLLoss2d()
 
@@ -40,7 +41,7 @@ for epoch in range(epochs):
     if epoch % 5 == 0:
         net.eval()
         test_dataset = CamvidDataSet('test', path)
-        test_loader = data.DataLoader(dataset, batch_size=5, num_workers=4, shuffle=True)
+        test_loader = data.DataLoader(dataset, batch_size=bsize, num_workers=4, shuffle=True)
         loss = 0
         counter = 0
         for in_batch, target_batch in test_loader:
