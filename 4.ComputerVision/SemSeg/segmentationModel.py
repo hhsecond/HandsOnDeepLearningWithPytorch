@@ -28,7 +28,7 @@ class SegmentationModel(nn.Module):
 
         self.final_deconv1 = DeconvBlock(inp=64, out=32, kernal=3, stride=2, pad=1)
         self.final_conv = ConvBlock(inp=32, out=32, kernal=3, stride=1, pad=1, bias=True, act=True)
-        self.final_deconv2 = DeconvBlock(inp=32, out=1, kernal=2, stride=2, pad=0)
+        self.final_deconv2 = DeconvBlock(inp=32, out=2, kernal=2, stride=2, pad=0)
 
     def forward(self, x):
         init_conv = self.init_conv(x)
