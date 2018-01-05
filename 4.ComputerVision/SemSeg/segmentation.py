@@ -1,8 +1,11 @@
 import torch
 from torch.utils import data
 from torch.autograd import Variable
+import time
+
 from torch import nn
 import torch.nn.functional as F
+from scipy import misc
 
 from dataset import CamvidDataSet
 from segmentationModel import SegmentationModel
@@ -26,6 +29,17 @@ dataset = CamvidDataSet('train', path)
 loader = data.DataLoader(dataset, batch_size=bsize, num_workers=4, shuffle=True)
 optimizer = torch.optim.Adam(net.parameters())
 loss_fn = nn.NLLLoss2d()
+
+
+def create_image(out):
+    """ Creating image from the outbatch """
+    img = out[0].max(0)[1]
+    misc.imsave('{}.png'.format(time.time()), img)
+
+
+def save_model(model):
+    torch.save(model.state_dict(), '{}.pth'.format(time.time()))
+
 
 for epoch in range(epochs):
     for in_batch, target_batch in loader:
@@ -52,4 +66,6 @@ for epoch in range(epochs):
             loss += loss_fn(F.log_softmax(out, 1), Variable(target_batch)).data[0]
         loss = loss / counter
         print(' ========== Testing Loss: {:.5f} =========='.format(loss, epoch))
+        create_image(out)
+        save_model(net)
         net.train()
