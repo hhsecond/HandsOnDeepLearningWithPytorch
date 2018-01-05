@@ -50,9 +50,8 @@ class CamvidDataSet(data.Dataset):
         """ converts input numpy image to torch tensor and normalize """
         # TODO - load cuda tensor if cuda_is_avialable
         img = self.transform(img)
-        # fetching pedestrian info as binary
-        lbl = np.all(lbl == self.pedestrian_rgb, 2).astype(int)
         # TODO - check whether this conversion to long is required
+        lbl = (lbl == 255).astype(int)
         lbl = torch.from_numpy(lbl).long()
         return img, lbl
 
