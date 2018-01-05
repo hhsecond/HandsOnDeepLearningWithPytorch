@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import torch
 from torch.utils import data
 from scipy import misc
@@ -11,9 +12,11 @@ class CamvidDataSet(data.Dataset):
     CamVid dataset Loader
     Note:
         Labels loads only pedestrian
+        # TODO - do loading on gpu
     """
 
     def __init__(self, split, path):
+        self.pedestrian_rgb = (64, 64, 0)
         inputdir_path = os.path.join(path, split)
         labledir_path = os.path.join(inputdir_path, 'labels')
         input_files = os.listdir(inputdir_path)
@@ -47,11 +50,16 @@ class CamvidDataSet(data.Dataset):
         """ converts input numpy image to torch tensor and normalize """
         # TODO - load cuda tensor if cuda_is_avialable
         img = self.transform(img)
+        # fetching pedestrian info as binary
+        lbl = np.all(lbl == self.pedestrian_rgb, 2).astype(int)
+        # TODO - check whether this conversion to long is required
         lbl = torch.from_numpy(lbl).long()
         return img, lbl
 
 
 if __name__ == '__main__':
-    loader = CamvidDataSet('train')
+    loader = CamvidDataSet(
+        'train', '/home/hhsecond/mypro/ThePyTorchBook/ThePyTorchBookDataSet/camvid')
     # TODO - Do it by using Lucent
-    transforms.ToPILImage('RGB')(loader[1][1].byte()).save('image.png')
+    # transforms.ToPILImage('RGB')(loader[1][1].byte()).save('image.png')
+    print(loader[1][1])
