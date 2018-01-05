@@ -40,14 +40,14 @@ for epoch in range(epochs):
         net.eval()
         test_dataset = CamvidDataSet('test', path)
         test_loader = data.DataLoader(dataset, batch_size=8, num_workers=4, shuffle=True)
-        test_loss = 0
+        loss = 0
         counter = 0
-        for test_in, test_target in test_loader:
+        for in_batch, target_batch in test_loader:
             if is_cuda:
-                test_in, test_target = test_in.cuda(), test_target.cuda()
-            test_out = net(Variable(test_in))
+                in_batch, target_batch = in_batch.cuda(), target_batch.cuda()
+            out = net(Variable(in_batch))
             counter += 1
-            test_loss += loss_fn(F.log_softmax(test_out, 1), Variable(test_target))
-        test_loss = test_loss.data[0] / counter
-        print(' ========== Testing Loss: {:.5f} ==========='.format(test_loss, epoch))
+            loss += loss_fn(F.log_softmax(out, 1), Variable(target_batch))
+        loss = loss.data[0] / counter
+        print(' ========== Testing Loss: {:.5f} =========='.format(loss, epoch))
         net.train()
