@@ -25,7 +25,7 @@ optimizer = torch.optim.Adam(net.parameters())
 loss_fn = nn.NLLLoss2d()
 
 
-for epoch in epochs:
+for epoch in range(epochs):
     for in_batch, target_batch in loader:
         if is_cuda:
             in_batch, target_batch = in_batch.cuda(), target_batch.cuda()
