@@ -55,14 +55,13 @@ def transfer_resnet(net):
 
 train_encoders = False
 is_cuda = torch.cuda.is_available()
-if is_cuda:
-    net = SegmentationModel(train_encoders=train_encoders).cuda()
-else:
-    net = SegmentationModel(train_encoders=train_encoders)
-net.train()
+net = SegmentationModel(train_encoders=train_encoders)
 
 if not train_encoders:
     transfer_resnet(net)
+if is_cuda:
+    net.cuda()
+net.train()
 
 # Training
 
