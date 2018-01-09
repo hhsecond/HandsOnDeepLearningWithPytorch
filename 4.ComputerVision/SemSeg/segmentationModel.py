@@ -74,7 +74,7 @@ class EncoderBlock(nn.Module):
             ConvBlock(inp=out, out=out, kernal=3, stride=1, pad=1, bias=False, act=True),
             ConvBlock(inp=out, out=out, kernal=3, stride=1, pad=1, bias=False, act=False))
         self.residue = ConvBlock(
-            inp=inp, out=out, kernal=1, stride=2, pad=0, bias=False, act=False)
+            inp=inp, out=out, kernal=3, stride=2, pad=1, bias=False, act=False)
 
         for param in self.parameters():
             param.requires_grad = requires_grad

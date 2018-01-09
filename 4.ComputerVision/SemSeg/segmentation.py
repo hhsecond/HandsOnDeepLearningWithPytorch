@@ -6,10 +6,10 @@ import time
 from torch import nn
 import torch.nn.functional as F
 from scipy import misc
-from torchvision.models import resnet18
 
 from dataset import CamvidDataSet
-from segmentationModel import SegmentationModel
+# from segmentationModel import SegmentationModel
+from resnetsegment import link_net as SegmentationModel
 
 # The datafolder must be downloaed
 # The path to data folder must be correct
@@ -17,48 +17,8 @@ from segmentationModel import SegmentationModel
 # TODO - solve the cuda run time issue
 
 
-def transfer_resnet(net):
-    resnet = resnet18()
-
-    # initial layers
-    initial_params = net.init_conv.parameters()  # weights and biases for conv and bn
-    conv_params = resnet.conv1.parameters()
-    next(initial_params).data = next(conv_params).data
-    bnparams = resnet.bn1.parameters()
-    next(initial_params).data = next(bnparams).data
-    next(initial_params).data = next(bnparams).data
-
-    # encoder1 layer 1
-    encoder1_param = net.encoder1.parameters()
-    layer1_param = resnet.layer1.parameters()
-    for _ in range(12):
-        next(encoder1_param).data = next(layer1_param).data
-
-    # encoder2 layer 2
-    encoder2_param = net.encoder2.parameters()
-    layer2_param = resnet.layer2.parameters()
-    for _ in range(15):
-        next(encoder2_param).data = next(layer2_param).data
-
-    # encoder3 layer 3
-    encoder3_param = net.encoder3.parameters()
-    layer3_param = resnet.layer3.parameters()
-    for _ in range(15):
-        next(encoder3_param).data = next(layer3_param).data
-
-    # encoder4 layer 4
-    encoder4_param = net.encoder4.parameters()
-    layer4_param = resnet.layer4.parameters()
-    for _ in range(15):
-        next(encoder4_param).data = next(layer4_param).data
-
-
-train_encoders = False
 is_cuda = torch.cuda.is_available()
-net = SegmentationModel(train_encoders=train_encoders)
-
-if not train_encoders:
-    transfer_resnet(net)
+net = SegmentationModel()
 if is_cuda:
     net.cuda()
 net.train()
