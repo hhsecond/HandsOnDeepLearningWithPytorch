@@ -71,7 +71,7 @@ epochs = 64
 bsize = 8
 dataset = CamvidDataSet('train', path)
 loader = data.DataLoader(dataset, batch_size=bsize, num_workers=4, shuffle=True)
-optimizer = torch.optim.Adam(net.parameters())
+optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, net.parameters()))
 loss_fn = nn.NLLLoss2d()
 
 
@@ -96,7 +96,7 @@ for epoch in range(epochs):
         optimizer.step()
         # TODO - make the visualization for this soon
     print('Training Loss: {:.5f}, Epochs: {:3d}'.format(loss.data[0], epoch))
-    if epoch % 5 == 0:
+    if epoch % 50 == 0:
         net.eval()
         test_dataset = CamvidDataSet('test', path)
         test_loader = data.DataLoader(test_dataset, batch_size=bsize, num_workers=4, shuffle=True)
