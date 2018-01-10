@@ -11,21 +11,15 @@ class SegmentationModel(nn.Module):
     # Cannot have resnet18 architecture because it doesn't do downsampling on first layer
     """
 
-    def __init__(self, train_encoders=False):
+    def __init__(self):
         super().__init__()
         self.init_conv = ConvBlock(inp=3, out=64, kernal=7, stride=2, pad=3, bias=False, act=True)
         self.init_maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
-        for param in self.init_conv.parameters():
-            param.requires_grad = train_encoders
-
-        for param in self.init_maxpool.parameters():
-            param.requires_grad = train_encoders
-
-        self.encoder1 = EncoderBlock(inp=64, out=64, requires_grad=True)
-        self.encoder2 = EncoderBlock(inp=64, out=128, requires_grad=train_encoders)
-        self.encoder3 = EncoderBlock(inp=128, out=256, requires_grad=train_encoders)
-        self.encoder4 = EncoderBlock(inp=256, out=512, requires_grad=train_encoders)
+        self.encoder1 = EncoderBlock(inp=64, out=64)
+        self.encoder2 = EncoderBlock(inp=64, out=128)
+        self.encoder3 = EncoderBlock(inp=128, out=256)
+        self.encoder4 = EncoderBlock(inp=256, out=512)
 
         self.decoder4 = DecoderBlock(inp=512, out=256)
         self.decoder3 = DecoderBlock(inp=256, out=128)
@@ -59,7 +53,7 @@ class SegmentationModel(nn.Module):
 class EncoderBlock(nn.Module):
     """ Residucal Block in linknet that does Encoding - layers in ResNet18 """
 
-    def __init__(self, inp, out, requires_grad):
+    def __init__(self, inp, out):
         """
         Resnet18 has first layer without downsampling.
         The parameter ``downsampling`` decides that
@@ -75,9 +69,6 @@ class EncoderBlock(nn.Module):
             ConvBlock(inp=out, out=out, kernal=3, stride=1, pad=1, bias=False, act=False))
         self.residue = ConvBlock(
             inp=inp, out=out, kernal=3, stride=2, pad=1, bias=False, act=False)
-
-        for param in self.parameters():
-            param.requires_grad = requires_grad
 
     def forward(self, x):
         out1 = self.block1(x)
