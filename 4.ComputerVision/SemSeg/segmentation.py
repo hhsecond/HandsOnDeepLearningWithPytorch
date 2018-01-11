@@ -8,8 +8,7 @@ import torch.nn.functional as F
 from scipy import misc
 
 from dataset import CamvidDataSet
-# from segmentationModel import SegmentationModel
-from resnetsegment import link_net as SegmentationModel
+from segmentationModel import SegmentationModel
 
 # The datafolder must be downloaed
 # The path to data folder must be correct
@@ -24,7 +23,6 @@ if is_cuda:
 net.train()
 
 # Training
-
 path = '/home/hhsecond/mypro/ThePyTorchBook/ThePyTorchBookDataSet/camvid'
 epochs = 64
 bsize = 8
