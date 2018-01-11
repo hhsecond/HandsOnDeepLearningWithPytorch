@@ -5,11 +5,11 @@ ThePyTorchBook [InComplete]
 Code used for the book
 ======================
 
-Repository is arranged chapter wise and each folder includes the code used + the visualization of models used. Visualization is created by using `Lucent`_. Dataset used for the models are either available in the shared `box`_ folder or downloadable from the ``torch`` utility packages such as ``torchvision``, ``torchtext`` or ``torchaudio``
+Repository is arranged chapter wise and each folder includes the code used + the visualization of models used. Visualization is created by using `FlashLight`_. Dataset used for the models are either available in the shared `box`_ folder or downloadable from the ``torch`` utility packages such as ``torchvision``, ``torchtext`` or ``torchaudio``
 
 .. _box: https://app.box.com/s/25ict2irqaz3nnd19qp8ymtmkwx3l61j
 
-.. _Lucent: https://github.com/hhsecond/lucent
+.. _FlashLight: https://github.com/dlguys/flashlight
 
 Chapters
 --------
@@ -25,9 +25,9 @@ Chapters
 
 Utilities
 ---------
-* Visualization is handled by Lucent - ::
+* Visualization is handled by FlashLight - ::
 
-    pip install lucent
+    pip install flashlight
 * Environment is handled by Pipenv - ::
 
     pip install pipenv
