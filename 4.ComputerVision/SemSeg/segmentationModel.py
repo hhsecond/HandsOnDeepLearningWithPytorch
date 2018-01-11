@@ -13,7 +13,7 @@ class SegmentationModel(nn.Module):
 
     def __init__(self):
         super().__init__()
-        self.init_conv = ConvBlock(inp=3, out=64, kernal=7, stride=2, pad=3, bias=False, act=True)
+        self.init_conv = ConvBlock(inp=3, out=64, kernal=7, stride=2, pad=3, bias=True, act=True)
         self.init_maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         self.encoder1 = EncoderBlock(inp=64, out=64)
@@ -62,13 +62,13 @@ class EncoderBlock(nn.Module):
         """
         super().__init__()
         self.block1 = nn.Sequential(
-            ConvBlock(inp=inp, out=out, kernal=3, stride=2, pad=1, bias=False, act=True),
-            ConvBlock(inp=out, out=out, kernal=3, stride=1, pad=1, bias=False, act=False))
+            ConvBlock(inp=inp, out=out, kernal=3, stride=2, pad=1, bias=True, act=True),
+            ConvBlock(inp=out, out=out, kernal=3, stride=1, pad=1, bias=True, act=True))
         self.block2 = nn.Sequential(
-            ConvBlock(inp=out, out=out, kernal=3, stride=1, pad=1, bias=False, act=True),
-            ConvBlock(inp=out, out=out, kernal=3, stride=1, pad=1, bias=False, act=False))
+            ConvBlock(inp=out, out=out, kernal=3, stride=1, pad=1, bias=True, act=True),
+            ConvBlock(inp=out, out=out, kernal=3, stride=1, pad=1, bias=True, act=True))
         self.residue = ConvBlock(
-            inp=inp, out=out, kernal=3, stride=2, pad=1, bias=False, act=False)
+            inp=inp, out=out, kernal=3, stride=2, pad=1, bias=True, act=True)
 
     def forward(self, x):
         out1 = self.block1(x)
