@@ -62,9 +62,9 @@ for epoch in range(epochs):
         for in_batch, target_batch in test_loader:
             if is_cuda:
                 in_batch, target_batch = in_batch.cuda(), target_batch.cuda()
-            out = net(Variable(in_batch))
+            out = net(Variable(in_batch, volatile=True))
             counter += 1
-            loss += loss_fn(F.log_softmax(out, 1), Variable(target_batch)).data[0]
+            loss += loss_fn(F.log_softmax(out, 1), Variable(target_batch, volatile=True)).data[0]
         loss = loss / counter
         print(' ========== Testing Loss: {:.5f} =========='.format(loss, epoch))
         create_image(out)
