@@ -29,7 +29,7 @@ bsize = 8
 dataset = CamvidDataSet('train', path)
 loader = data.DataLoader(dataset, batch_size=bsize, num_workers=4, shuffle=True)
 optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, net.parameters()))
-loss_fn = nn.NLLLoss2d()
+loss_fn = nn.NLLLoss()
 
 
 def create_image(out):
