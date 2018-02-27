@@ -20,7 +20,6 @@
 ###########################################################################
 
 import torch
-from torch.autograd import Variable
 
 from datautils import get_data, decoder, check_fizbuz
 
@@ -40,25 +39,19 @@ else:
     dtype = torch.FloatTensor
 
 x = torch.from_numpy(trX).type(dtype)
-x = Variable(x, requires_grad=False)
 y = torch.from_numpy(trY).type(dtype)
-y = Variable(y, requires_grad=False)
 
-print(x.grad, x.grad_fn, x.data)
+print(x.grad, x.grad_fn, x)
 # None, None, [torch.FloatTensor of size 900x10]
 
-w1 = torch.randn(input_size, hidden_units).type(dtype)
-w1 = Variable(w1, requires_grad=True)
+w1 = torch.randn(input_size, hidden_units, requires_grad=True).type(dtype)
 w2 = torch.randn(hidden_units, output_size).type(dtype)
-w2 = Variable(w2, requires_grad=True)
 
-print(w1.grad, w1.grad_fn, w1.data)
+print(w1.grad, w1.grad_fn, w1)
 # None, None, [torch.FloatTensor of size 10x100]
 
-b1 = torch.zeros(1, hidden_units).type(dtype)
-b1 = Variable(b1, requires_grad=True)
-b2 = torch.zeros(1, output_size).type(dtype)
-b2 = Variable(b2, requires_grad=True)
+b1 = torch.zeros(1, hidden_units, requires_grad=True).type(dtype)
+b2 = torch.zeros(1, output_size, requires_grad=True).type(dtype)
 
 no_of_batches = int(len(trX) / batches)
 for epoch in range(epochs):
@@ -71,7 +64,7 @@ for epoch in range(epochs):
         a2 = x_.matmul(w1)
         a2 = a2.add(b1)
 
-        print(a2.grad, a2.grad_fn, a2.data)
+        print(a2.grad, a2.grad_fn, a2)
         # None, <AddBackward1 object at 0x7fe4fb786208>, [torch.FloatTensor of size 64x100]
 
         h2 = a2.sigmoid()
@@ -84,23 +77,29 @@ for epoch in range(epochs):
         output = error.pow(2).sum() / 2.0
         output.backward()
 
-        print(x.grad, x.grad_fn, x.data)
+        print(x.grad, x.grad_fn, x)
         # None, None, [torch.FloatTensor of size 900x10]
-        print(w1.grad, w1.grad_fn, w1.data)
+        print(w1.grad, w1.grad_fn, w1)
         # [torch.FloatTensor of size 10x100], None, [torch.FloatTensor of size 10x100]
-        print(a2.grad, a2.grad_fn, a2.data)
+        print(a2.grad, a2.grad_fn, a2)
         # None, <AddBackward1 object at 0x7fedcd24f048>, [torch.FloatTensor of size 64x100]
 
-        w1.data -= lr * w1.grad.data
-        w2.data -= lr * w2.grad.data
-        b1.data -= lr * b1.grad.data
-        b2.data -= lr * b2.grad.data
-        w1.grad.data.zero_()
-        w2.grad.data.zero_()
-        b1.grad.data.zero_()
-        b2.grad.data.zero_()
+        # Direct manipulation of data outside autograd is not allowed anymore
+        # so this code snippet won't work with pytoch version 0.4+
+        try:
+            w1 -= lr * w1.grad
+            w2 -= lr * w2.grad
+            b1 -= lr * b1.grad
+            b2 -= lr * b2.grad
+            w1.grad.zero_()
+            w2.grad.zero_()
+            b1.grad.zero_()
+            b2.grad.zero_()
+        except RuntimeError as e:
+            raise Exception('Direct manipulation of autograd Variable is not allowed in pytorch \
+version 0.4+. Error thrown by pytorch: {}'.format(e))
     if epoch % 10:
-        print(epoch, output.data[0])
+        print(epoch, output.item())
 # traversing the graph using .grad_fn
 print(output.grad_fn)
 # <DivBackward0 object at 0x7eff00ae3ef0>
@@ -112,8 +111,8 @@ print(output.grad_fn.next_functions[0][0].next_functions[0][0])
 
 # test
 with torch.no_grad():
-    x = Variable(torch.from_numpy(teX).type(dtype))
-    y = Variable(torch.from_numpy(teY).type(dtype))
+    x = torch.from_numpy(teX).type(dtype)
+    y = torch.from_numpy(teY).type(dtype)
 
     a2 = x.matmul(w1)
     a2 = a2.add(b1)
@@ -129,7 +128,7 @@ with torch.no_grad():
         num = decoder(teX[i])
         print(
             'Number: {} -- Actual: {} -- Prediction: {}'.format(
-                num, check_fizbuz(num), outli[hyp[i].data.max(0)[1][0]]))
-    print('Test loss: ', output.data[0] / len(x))
-    accuracy = hyp.data.max(1)[1] == y.data.max(1)[1]
-    print('accuracy: ', accuracy.sum() / len(accuracy))
+                num, check_fizbuz(num), outli[hyp[i].max(0)[1].item()]))
+    print('Test loss: ', output.item() / len(x))
+    accuracy = hyp.max(1)[1] == y.max(1)[1]
+    print('accuracy: ', accuracy.sum().item() / len(accuracy))

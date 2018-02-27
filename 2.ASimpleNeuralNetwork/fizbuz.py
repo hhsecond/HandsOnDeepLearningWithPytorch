@@ -19,10 +19,11 @@
 ###########################################################################
 ###########################################################################
 
+import time
 import torch
-from torch.autograd import Variable
 from torch import nn
 import torch.nn.functional as F
+from torch import jit
 import torch.optim as optim
 
 from datautils import get_data, decoder, check_fizbuz
@@ -33,6 +34,7 @@ batches = 64
 lr = 0.01
 
 
+@jit.compile
 class FizBuzNet(nn.Module):
     """
     2 layer network for predicting fiz or buz
@@ -41,7 +43,7 @@ class FizBuzNet(nn.Module):
     """
 
     def __init__(self, input_size, output_size):
-        super().__init__()
+        super(FizBuzNet, self).__init__()
         # A simple heuristic to find the hiddenlayer size
         hidden_size = 100
         self.hidden = nn.Linear(input_size, hidden_size)
@@ -59,13 +61,13 @@ if torch.cuda.is_available():
     dtype = torch.cuda.FloatTensor
 else:
     dtype = torch.FloatTensor
-x = Variable(torch.from_numpy(trX).type(dtype), requires_grad=False)
-y = Variable(torch.from_numpy(trY).type(dtype), requires_grad=False)
+x = torch.from_numpy(trX).type(dtype)
+y = torch.from_numpy(trY).type(dtype)
 
 net = FizBuzNet(input_size, 4)
-loss = nn.MSELoss()
+loss_fn = nn.MSELoss()
 optimizer = optim.Adam(net.parameters(), lr=lr)
-
+total_time = []
 no_of_batches = int(len(trX) / batches)
 for epoch in range(epochs):
     for batch in range(no_of_batches):
@@ -74,25 +76,32 @@ for epoch in range(epochs):
         end = start + batches
         x_ = x[start:end]
         y_ = y[start:end]
+        start = time.time()
         hyp = net(x_)
-        output = loss(hyp, y_)
-        output.backward()
+        loss = loss_fn(hyp, y_)
+        loss.backward()
+        total_time.append(time.time() - start)
         optimizer.step()
     if epoch % 10:
-        print(epoch, output.data[0])
+        print(epoch, loss.item())
+total_sum = sum(total_time)
+total_len = len(total_time)
+print(total_sum, total_len, total_sum / total_len)
+exit()
 
 
 # Test
-x = Variable(torch.from_numpy(teX).type(dtype), volatile=True)
-y = Variable(torch.from_numpy(teY).type(dtype), volatile=True)
-hyp = net(x)
-output = loss(hyp, y)
-outli = ['fizbuz', 'buz', 'fiz', 'number']
-for i in range(len(teX)):
-    num = decoder(teX[i])
-    print(
-        'Number: {} -- Actual: {} -- Prediction: {}'.format(
-            num, check_fizbuz(num), outli[hyp[i].data.max(0)[1][0]]))
-print('Test loss: ', output.data[0] / len(x))
-accuracy = hyp.data.max(1)[1] == y.data.max(1)[1]
-print('accuracy: ', accuracy.sum() / len(accuracy))
+with torch.no_grad():
+    x = torch.from_numpy(teX).type(dtype)
+    y = torch.from_numpy(teY).type(dtype)
+    hyp = net(x)
+    output = loss_fn(hyp, y)
+    outli = ['fizbuz', 'buz', 'fiz', 'number']
+    for i in range(len(teX)):
+        num = decoder(teX[i])
+        print(
+            'Number: {} -- Actual: {} -- Prediction: {}'.format(
+                num, check_fizbuz(num), outli[hyp[i].max(0)[1].item()]))
+    print('Test loss: ', output.item() / len(x))
+    accuracy = hyp.max(1)[1] == y.max(1)[1]
+    print('accuracy: ', accuracy.sum().item() / len(accuracy))

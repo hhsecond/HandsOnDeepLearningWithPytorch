@@ -51,7 +51,6 @@ for epoch in range(epochs):
         loss = loss_fn(F.log_softmax(out, 1), Variable(target_batch))
         loss.backward()
         optimizer.step()
-        # TODO - make the visualization for this soon
     print('Training Loss: {:.5f}, Epochs: {:3d}'.format(loss.data[0], epoch))
     if epoch % 50 == 0:
         net.eval()
