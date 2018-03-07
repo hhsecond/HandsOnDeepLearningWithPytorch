@@ -7,3 +7,22 @@ Arrangement for this chapter is bit different from previous chapter. Here we try
 
 	The SNLI corpus (version 1.0) is a collection of 570k human-written English sentence pairs manually labeled for balanced classification with the labels entailment, contradiction, and neutral, supporting the task of natural language inference (NLI), also known as recognizing textual entailment (RTE). We aim for it to serve both as a benchmark for evaluating representational systems for text, especially including those induced by representation learning methods, as well as a resource for developing NLP models of any kind. 
 
+Citation
+--------
+SNLI data set
+::
+	http://nlp.stanford.edu/pubs/snli_paper.pdf
+
+	Samuel R. Bowman, Gabor Angeli, Christopher Potts, and Christopher D. Manning. 2015.
+	A large annotated corpus for learning natural language inference. 
+	Proceedings of the 2015 Conference on Empirical Methods in Natural Language Processing (EMNLP).
+	@inproceedings{snli:emnlp2015,
+		Author = {Bowman, Samuel R. and Angeli, Gabor and Potts, Christopher, and Manning, Christopher D.},
+		Booktitle = {Proceedings of the 2015 Conference on Empirical Methods in Natural Language Processing (EMNLP)},
+		Publisher = {Association for Computational Linguistics},
+		Title = {A large annotated corpus for learning natural language inference},
+		Year = {2015}}						
+
+	Contact: sbowman@stanford.edu
+
+	Project page: http://nlp.stanford.edu/projects/snli/
