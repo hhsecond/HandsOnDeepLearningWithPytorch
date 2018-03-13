@@ -45,7 +45,7 @@ print(x.grad, x.grad_fn, x)
 # None, None, [torch.FloatTensor of size 900x10]
 
 w1 = torch.randn(input_size, hidden_units, requires_grad=True).type(dtype)
-w2 = torch.randn(hidden_units, output_size).type(dtype)
+w2 = torch.randn(hidden_units, output_size, requires_grad=True).type(dtype)
 
 print(w1.grad, w1.grad_fn, w1)
 # None, None, [torch.FloatTensor of size 10x100]
