@@ -57,7 +57,7 @@ class RNNClassifier(nn.Module):
         self.embed = nn.Embedding(config.vocab_dim, config.embed_dim)
         self.encoder = Encoder(config)
         self.classifier = nn.Sequential(
-            Merger(config.embed_dim, config.dropout)
+            Merger(config.embed_dim, config.dropout),
             nn.Linear(4 * config.embed_dim, config.fc1_dim),
             nn.ReLU(),
             nn.BatchNorm1d(config.fc1_dim),
