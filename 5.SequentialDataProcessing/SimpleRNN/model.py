@@ -3,12 +3,12 @@ import torch
 
 
 class RNNCell(nn.Module):
-    def __init__(self, vocab_dim, hidden_size):
+    def __init__(self, embed_dim, hidden_size, vocab_dim):
         super().__init__()
 
         self.hidden_size = hidden_size
-        self.input2hidden = nn.Linear(vocab_dim + hidden_size, hidden_size)
-        self.input2output = nn.Linear(vocab_dim + hidden_size, vocab_dim)
+        self.input2hidden = nn.Linear(embed_dim + hidden_size, hidden_size)
+        self.input2output = nn.Linear(embed_dim + hidden_size, vocab_dim)
         self.softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, inputs, hidden):
@@ -43,8 +43,10 @@ class Merger(nn.Module):
         self.dropout = nn.Dropout(p=dropout)
 
     def forward(self, prem, hypo):
+        diff = prem - hypo
+        prod = prem * hypo
         return self.dropout(self.bn(torch.cat(
-            [prem, hypo, prem - hypo, prem * hypo], 1)))
+            [prem, hypo, diff, prod], 1)))
 
 
 class RNNClassifier(nn.Module):
@@ -54,8 +56,8 @@ class RNNClassifier(nn.Module):
         self.config = config
         self.embed = nn.Embedding(config.vocab_dim, config.embed_dim)
         self.encoder = Encoder(config)
-        self.merger = Merger(config.embed_dim, config.dropout)
-        self.out = nn.Sequential(
+        self.classifier = nn.Sequential(
+            Merger(config.embed_dim, config.dropout)
             nn.Linear(4 * config.embed_dim, config.fc1_dim),
             nn.ReLU(),
             nn.BatchNorm1d(config.fc1_dim),
@@ -68,5 +70,5 @@ class RNNClassifier(nn.Module):
         hypo_embed = self.embed(batch.hypothesis)
         premise = self.encoder(prem_embed)
         hypothesis = self.encoder(hypo_embed)
-        scores = self.out(self.merger(premise, hypothesis))
+        scores = self.classifier(premise, hypothesis)
         return scores
