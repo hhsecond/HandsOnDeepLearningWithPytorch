@@ -71,7 +71,7 @@ for epoch in range(epochs):
         iterations += 1
         answer = model(batch)
         n_correct += (torch.max(answer, 1)
-                      [1].view(batch.label.size()).data == batch.label.data).sum()
+                      [1].view(batch.label.size()) == batch.label).sum()
         n_total += batch.batch_size
         train_acc = 100. * n_correct / n_total
         loss = criterion(answer, batch.label)
