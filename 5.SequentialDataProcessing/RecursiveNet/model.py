@@ -104,11 +104,6 @@ class SPINN(nn.Module):
                 tracker_states, trans_hyp = self.tracker(buffers, stacks)
                 if trans_hyp is not None:
                     trans = trans_hyp.max(1)[1]
-                    # if transitions is not None:
-                    #     trans_loss += F.cross_entropy(trans_hyp, trans)
-                    #     trans_acc += (trans_preds.data == trans.data).mean()
-                    # else:
-                    #     trans = trans_preds
             else:
                 tracker_states = itertools.repeat(None)
             lefts, rights, trackings = [], [], []
@@ -129,7 +124,7 @@ class SPINN(nn.Module):
         return bundle([stack.pop() for stack in stacks])[0]
 
 
-class Feature(nn.Module):
+class Merger(nn.Module):
 
     def __init__(self, size, dropout):
         super().__init__()
@@ -141,27 +136,6 @@ class Feature(nn.Module):
             [prem, hypo, prem - hypo, prem * hypo], 1)))
 
 
-class Encoder(nn.Module):
-
-    def __init__(self, config):
-        super().__init__()
-        self.config = config
-        input_size = config.d_proj if config.projection else config.d_embed
-        self.rnn = nn.LSTM(input_size=input_size, hidden_size=config.d_hidden,
-                           num_layers=config.n_layers, dropout=config.rnn_dropout,
-                           bidirectional=config.birnn)
-
-    def forward(self, inputs, _):
-        batch_size = inputs.size()[1]
-        state_shape = self.config.n_cells, batch_size, self.config.d_hidden
-        h0 = c0 = inputs.data.new(*state_shape).zero_()
-        outputs, (ht, ct) = self.rnn(inputs, (h0, c0))
-        if not self.config.birnn:
-            return ht[-1]
-        else:
-            return ht[-2:].transpose(0, 1).contiguous().view(batch_size, -1)
-
-
 class SNLIClassifier(nn.Module):
 
     def __init__(self, config):
@@ -171,10 +145,10 @@ class SNLIClassifier(nn.Module):
         self.projection = nn.Linear(config.d_embed, config.d_proj)
         self.embed_bn = nn.BatchNorm1d(config.d_proj)
         self.embed_dropout = nn.Dropout(p=config.embed_dropout)
-        self.encoder = SPINN(config) if config.spinn else Encoder(config)
+        self.encoder = SPINN(config)
         feat_in_size = config.d_hidden * (
             2 if self.config.birnn and not self.config.spinn else 1)
-        self.feature = Feature(feat_in_size, config.mlp_dropout)
+        self.merger = Merger(feat_in_size, config.mlp_dropout)
         self.mlp_dropout = nn.Dropout(p=config.mlp_dropout)
         self.relu = nn.ReLU()
         mlp_in_size = 4 * feat_in_size
@@ -198,5 +172,5 @@ class SNLIClassifier(nn.Module):
             prem_trans = hypo_trans = None
         premise = self.encoder(prem_embed, prem_trans)
         hypothesis = self.encoder(hypo_embed, hypo_trans)
-        scores = self.out(self.feature(premise, hypothesis))
+        scores = self.out(self.merger(premise, hypothesis))
         return scores

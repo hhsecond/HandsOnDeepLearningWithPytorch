@@ -1,6 +1,7 @@
 import os
 import time
 import glob
+from pathlib import Path
 
 import torch
 from torch import optim
@@ -17,15 +18,16 @@ answers = data.Field(sequential=False)
 
 train, dev, test = datasets.SNLI.splits(inputs, answers)
 
+vector_cache = os.path.join(USERHOME, '.vector_cache/glove.6B.300d.txt.pt')
+
+USERHOME = str(Path.home())
 inputs.build_vocab(train, dev, test)
-if args.word_vectors:
-    if os.path.isfile(args.vector_cache):
-        inputs.vocab.vectors = torch.load(args.vector_cache)
-    else:
-        inputs.vocab.load_vectors(wv_dir=args.data_cache,
-                                  wv_type=args.word_vectors, wv_dim=args.d_embed)
-        os.makedirs(os.path.dirname(args.vector_cache), exist_ok=True)
-        torch.save(inputs.vocab.vectors, args.vector_cache)
+if os.path.isfile(vector_cache):
+    inputs.vocab.vectors = torch.load(vector_cache)
+else:
+    inputs.vocab.load_vectors()
+    os.makedirs(os.path.dirname(args.vector_cache), exist_ok=True)
+    torch.save(inputs.vocab.vectors, vector_cache)
 answers.build_vocab(train)
 
 train_iter, dev_iter, test_iter = data.BucketIterator.splits(

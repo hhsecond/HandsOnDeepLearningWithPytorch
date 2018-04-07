@@ -43,7 +43,7 @@ class FizBuzNet(nn.Module):
     """
 
     def __init__(self, input_size, output_size):
-        super(FizBuzNet, self).__init__()
+        super().__init__()
         # A simple heuristic to find the hiddenlayer size
         hidden_size = 100
         self.hidden = nn.Linear(input_size, hidden_size)
@@ -87,7 +87,6 @@ for epoch in range(epochs):
 total_sum = sum(total_time)
 total_len = len(total_time)
 print(total_sum, total_len, total_sum / total_len)
-exit()
 
 
 # Test
