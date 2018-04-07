@@ -1,6 +1,9 @@
 **************************
 Sequential Data Processing
 **************************
+TODO - talk about attention - attention is all you need
+TODO - pytorch for audio with STFT and other FTs
+
 Arrangement for this chapter is bit different from previous chapter. Here we try to solve the same problem with different NLP techniques. The task for this chapter is to classify sentences as entailment, contradiction, and neutral. The dataset is provided by Stanford Natural Language Group and is called as The Stanford Natural Language Inference (SNLI) Corpus. The brief from `SNLI page`_ 
 
 .. _SNLI page: https://nlp.stanford.edu/projects/snli/
