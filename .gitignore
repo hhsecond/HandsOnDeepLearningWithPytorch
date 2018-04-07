@@ -102,3 +102,6 @@ ENV/
 
 *ThePyTorchBookDataSet*
 .data
+data
+processed
+raw
