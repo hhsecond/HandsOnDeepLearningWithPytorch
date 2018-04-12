@@ -28,16 +28,6 @@ https://github.com/Avhirup/Progressive-Growing-Of-GANs-Pytorch-
 https://github.com/github-pengge/PyTorch-progressive_growing_of_gans
 http://deepsound.io/pggan_specs.html
 
-Vanilla Gan
------------
-https://github.com/diegoalejogm/gans
-
-
-Star Gan
---------
-https://github.com/yunjey/StarGAN
-https://arxiv.org/abs/1711.09020
-https://github.com/facebookresearch/FaderNetworks
 
 
 Learn this later
