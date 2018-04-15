@@ -6,9 +6,9 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn, optim, cuda, backends
-from torch.autograd import Variable
 from torch.utils import data
 from torchvision import datasets, transforms, utils
+from flashlight import FlashLight
 backends.cudnn.benchmark = True
 
 CUDA = torch.cuda.is_available()
@@ -57,14 +57,14 @@ for epoch in range(25):
 #     cuda.synchronize()
     time_tr = time.time()
     net.train(True)
+    fl = FlashLight(net)
     for input, _ in tr:
         if CUDA:
-            input = Variable(input.cuda(async=True))
-        else:
-            input = Variable(input)
-        target = Variable((input.data[:,0] * 255).long())
+            input = input.cuda(async=True)
+        target = (input.data[:,0] * 255).long()
         loss = F.cross_entropy(net(input), target)
-        err_tr.append(loss.data[0])
+        print(loss.item())
+        err_tr.append(loss.item())
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
@@ -78,10 +78,8 @@ for epoch in range(25):
     net.train(False)
     for input, _ in te:
         if CUDA:
-            input = Variable(input.cuda(async=True), volatile=True)
-        else:
-            input = Variable(input, volatile=True)
-        target = Variable((input.data[:,0] * 255).long())
+            input = input.cuda(async=True)
+        target = (input.data[:,0] * 255).long()
         loss = F.cross_entropy(net(input), target)
         err_te.append(loss.data[0])
     # cuda.synchronize()
@@ -92,7 +90,7 @@ for epoch in range(25):
     net.train(False)
     for i in range(28):
         for j in range(28):
-            out = net(Variable(sample, volatile=True))
+            out = net(sample, volatile=True)
             probs = F.softmax(out[:, :, i, j]).data
             sample[:, :, i, j] = torch.multinomial(probs, 1).float() / 255.
     utils.save_image(sample, 'sample_{:02d}.png'.format(epoch), nrow=12, padding=0)
