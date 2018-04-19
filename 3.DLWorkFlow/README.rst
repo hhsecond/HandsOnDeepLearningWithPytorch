@@ -11,4 +11,4 @@ DL WorkFlow
 - Ignite
 - Debugging and profiling
 - Compilation and JIT
-- Loading and dumping models (storage.cude('devis'))
+- Loading and dumping models (storage.cude('device'))
