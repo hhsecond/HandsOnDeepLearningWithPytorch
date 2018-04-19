@@ -1,12 +1,3 @@
-"""
-Neural network modules for WaveNet
-
-References :
-    https://arxiv.org/pdf/1609.03499.pdf
-    https://github.com/ibab/tensorflow-wavenet
-    https://qiita.com/MasaEguchi/items/cd5f7e9735a120f27e2a
-    https://github.com/musyoku/wavenet/issues/4
-"""
 import torch
 import numpy as np
 
@@ -186,16 +177,13 @@ class ResidualBlock(torch.nn.Module):
         gated_tanh = self.gate_tanh(output)
         gated_sigmoid = self.gate_sigmoid(output)
         gated = gated_tanh * gated_sigmoid
-
         # Residual network
         output = self.conv_res(gated)
         input_cut = x[:, :, -output.size(2):]
         output += input_cut
-
         # Skip connection
         skip = self.conv_skip(gated)
         skip = skip[:, :, -skip_size:]
-
         return output, skip
 
 
@@ -230,13 +218,11 @@ class ResidualStack(torch.nn.Module):
 
     def build_dilations(self):
         dilations = []
-
         # 5 = stack[layer1, layer2, layer3, layer4, layer5]
         for s in range(0, self.stack_size):
             # 10 = layer[dilation=1, dilation=2, 4, 8, 16, 32, 64, 128, 256, 512]
             for l in range(0, self.layer_size):
                 dilations.append(2 ** l)
-
         return dilations
 
     def stack_res_block(self, res_channels, skip_channels):
@@ -246,11 +232,9 @@ class ResidualStack(torch.nn.Module):
         """
         res_blocks = []
         dilations = self.build_dilations()
-
         for dilation in dilations:
             block = self._residual_block(res_channels, skip_channels, dilation)
             res_blocks.append(block)
-
         return res_blocks
 
     def forward(self, x, skip_size):
@@ -261,12 +245,10 @@ class ResidualStack(torch.nn.Module):
         """
         output = x
         skip_connections = []
-
         for res_block in self.res_blocks:
             # output is the next input
             output, skip = res_block(output, skip_size)
             skip_connections.append(skip)
-
         return torch.stack(skip_connections)
 
 
@@ -281,7 +263,6 @@ class DensNet(torch.nn.Module):
 
         self.conv1 = torch.nn.Conv1d(channels, channels, 1)
         self.conv2 = torch.nn.Conv1d(channels, channels, 1)
-
         self.relu = torch.nn.ReLU()
         self.softmax = torch.nn.Softmax(dim=1)
 
@@ -290,9 +271,7 @@ class DensNet(torch.nn.Module):
         output = self.conv1(output)
         output = self.relu(output)
         output = self.conv2(output)
-
         output = self.softmax(output)
-
         return output
 
 
@@ -307,27 +286,20 @@ class WaveNetModule(torch.nn.Module):
         :return:
         """
         super(WaveNetModule, self).__init__()
-
         self.receptive_fields = self.calc_receptive_fields(layer_size, stack_size)
-
         self.causal = CausalConv1d(in_channels, res_channels)
-
         self.res_stack = ResidualStack(layer_size, stack_size, res_channels, in_channels)
-
         self.densnet = DensNet(in_channels)
 
     @staticmethod
     def calc_receptive_fields(layer_size, stack_size):
         layers = [2 ** i for i in range(0, layer_size)] * stack_size
         num_receptive_fields = np.sum(layers)
-
         return int(num_receptive_fields)
 
     def calc_output_size(self, x):
         output_size = int(x.size(2)) - self.receptive_fields
-
         self.check_input_size(x, output_size)
-
         return output_size
 
     def check_input_size(self, x, output_size):
@@ -341,16 +313,10 @@ class WaveNetModule(torch.nn.Module):
         :return: Tensor[batch, timestep, channels]
         """
         output = x.transpose(1, 2)
-
         output_size = self.calc_output_size(output)
-
         output = self.causal(output)
-
         skip_connections = self.res_stack(output, output_size)
-
         output = torch.sum(skip_connections, dim=0)
-
         output = self.densnet(output)
-
         return output.transpose(1, 2).contiguous()
 
