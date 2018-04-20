@@ -1,166 +1,353 @@
-import torch
-from torch.autograd import Variable
-import itertools
-from util.image_pool import ImagePool
-from .base_model import BaseModel
-from . import networks
+import torch.nn as nn
+import torch.nn.functional as F
+
+class ResidualBlock(nn.Module):
+    def __init__(self, in_features):
+        super(ResidualBlock, self).__init__()
+
+        conv_block = [  nn.ReflectionPad2d(1),
+                        nn.Conv2d(in_features, in_features, 3),
+                        nn.InstanceNorm2d(in_features),
+                        nn.ReLU(inplace=True),
+                        nn.ReflectionPad2d(1),
+                        nn.Conv2d(in_features, in_features, 3),
+                        nn.InstanceNorm2d(in_features)  ]
+
+        self.conv_block = nn.Sequential(*conv_block)
+
+    def forward(self, x):
+        return x + self.conv_block(x)
+
+class Generator(nn.Module):
+    def __init__(self, input_nc, output_nc, n_residual_blocks=9):
+        super(Generator, self).__init__()
+
+        # Initial convolution block       
+        model = [   nn.ReflectionPad2d(3),
+                    nn.Conv2d(input_nc, 64, 7),
+                    nn.InstanceNorm2d(64),
+                    nn.ReLU(inplace=True) ]
+
+        # Downsampling
+        in_features = 64
+        out_features = in_features*2
+        for _ in range(2):
+            model += [  nn.Conv2d(in_features, out_features, 3, stride=2, padding=1),
+                        nn.InstanceNorm2d(out_features),
+                        nn.ReLU(inplace=True) ]
+            in_features = out_features
+            out_features = in_features*2
+
+        # Residual blocks
+        for _ in range(n_residual_blocks):
+            model += [ResidualBlock(in_features)]
+
+        # Upsampling
+        out_features = in_features//2
+        for _ in range(2):
+            model += [  nn.ConvTranspose2d(in_features, out_features, 3, stride=2, padding=1, output_padding=1),
+                        nn.InstanceNorm2d(out_features),
+                        nn.ReLU(inplace=True) ]
+            in_features = out_features
+            out_features = in_features//2
+
+        # Output layer
+        model += [  nn.ReflectionPad2d(3),
+                    nn.Conv2d(64, output_nc, 7),
+                    nn.Tanh() ]
+
+        self.model = nn.Sequential(*model)
+
+    def forward(self, x):
+        return self.model(x)
+
+class Discriminator(nn.Module):
+    def __init__(self, input_nc):
+        super(Discriminator, self).__init__()
+
+        # A bunch of convolutions one after another
+        model = [   nn.Conv2d(input_nc, 64, 4, stride=2, padding=1),
+                    nn.LeakyReLU(0.2, inplace=True) ]
+
+        model += [  nn.Conv2d(64, 128, 4, stride=2, padding=1),
+                    nn.InstanceNorm2d(128), 
+                    nn.LeakyReLU(0.2, inplace=True) ]
+
+        model += [  nn.Conv2d(128, 256, 4, stride=2, padding=1),
+                    nn.InstanceNorm2d(256), 
+                    nn.LeakyReLU(0.2, inplace=True) ]
+
+        model += [  nn.Conv2d(256, 512, 4, padding=1),
+                    nn.InstanceNorm2d(512), 
+                    nn.LeakyReLU(0.2, inplace=True) ]
+
+        # FCN classification layer
+        model += [nn.Conv2d(512, 1, 4, padding=1)]
+
+        self.model = nn.Sequential(*model)
+
+    def forward(self, x):
+        x =  self.model(x)
+        # Average pooling and flatten
+        return F.avg_pool2d(x, x.size()[2:]).view(x.size()[0], -1)
 
 
-class CycleGANModel(BaseModel):
-    def name(self):
-        return 'CycleGANModel'
+def tensor2image(tensor):
+    image = 127.5*(tensor[0].cpu().float().numpy() + 1.0)
+    if image.shape[0] == 1:
+        image = np.tile(image, (3,1,1))
+    return image.astype(np.uint8)
 
-    def initialize(self, opt):
-        BaseModel.initialize(self, opt)
+class Logger():
+    def __init__(self, n_epochs, batches_epoch):
+        self.viz = Visdom()
+        self.n_epochs = n_epochs
+        self.batches_epoch = batches_epoch
+        self.epoch = 1
+        self.batch = 1
+        self.prev_time = time.time()
+        self.mean_period = 0
+        self.losses = {}
+        self.loss_windows = {}
+        self.image_windows = {}
 
-        # specify the training losses you want to print out. The program will call base_model.get_current_errors
-        self.loss_names = ['D_A', 'G_A', 'cycle_A', 'idt_A', 'D_B', 'G_B', 'cycle_B', 'idt_B']
-        # specify the images you want to save/display. The program will call base_model.get_current_visuals
-        visual_names_A = ['real_A', 'fake_B', 'rec_A']
-        visual_names_B = ['real_B', 'fake_A', 'rec_B']
-        if self.isTrain and self.opt.lambda_identity > 0.0:
-            visual_names_A.append('idt_A')
-            visual_names_B.append('idt_B')
 
-        self.visual_names = visual_names_A + visual_names_B
-        # specify the models you want to save to the disk. The program will call base_model.save
-        if self.isTrain:
-            self.model_names = ['G_A', 'G_B', 'D_A', 'D_B']
-        else:  # during test time, only load Gs
-            self.model_names = ['G_A', 'G_B']
+    def log(self, losses=None, images=None):
+        self.mean_period += (time.time() - self.prev_time)
+        self.prev_time = time.time()
 
-        # load/define networks
-        # The naming conversion is different from those used in the paper
-        # Code (paper): G_A (G), G_B (F), D_A (D_Y), D_B (D_X)
-        self.netG_A = networks.define_G(opt.input_nc, opt.output_nc,
-                                        opt.ngf, opt.which_model_netG, opt.norm, not opt.no_dropout, opt.init_type, self.gpu_ids)
-        self.netG_B = networks.define_G(opt.output_nc, opt.input_nc,
-                                        opt.ngf, opt.which_model_netG, opt.norm, not opt.no_dropout, opt.init_type, self.gpu_ids)
+        sys.stdout.write('\rEpoch %03d/%03d [%04d/%04d] -- ' % (self.epoch, self.n_epochs, self.batch, self.batches_epoch))
 
-        if self.isTrain:
-            use_sigmoid = opt.no_lsgan
-            self.netD_A = networks.define_D(opt.output_nc, opt.ndf,
-                                            opt.which_model_netD,
-                                            opt.n_layers_D, opt.norm, use_sigmoid, opt.init_type, self.gpu_ids)
-            self.netD_B = networks.define_D(opt.input_nc, opt.ndf,
-                                            opt.which_model_netD,
-                                            opt.n_layers_D, opt.norm, use_sigmoid, opt.init_type, self.gpu_ids)
-        if not self.isTrain or opt.continue_train:
-            self.load_networks(opt.which_epoch)
+        for i, loss_name in enumerate(losses.keys()):
+            if loss_name not in self.losses:
+                self.losses[loss_name] = losses[loss_name].data[0]
+            else:
+                self.losses[loss_name] += losses[loss_name].data[0]
 
-        if self.isTrain:
-            self.fake_A_pool = ImagePool(opt.pool_size)
-            self.fake_B_pool = ImagePool(opt.pool_size)
-            # define loss functions
-            self.criterionGAN = networks.GANLoss(use_lsgan=not opt.no_lsgan, tensor=self.Tensor)
-            self.criterionCycle = torch.nn.L1Loss()
-            self.criterionIdt = torch.nn.L1Loss()
-            # initialize optimizers
-            self.optimizer_G = torch.optim.Adam(itertools.chain(self.netG_A.parameters(), self.netG_B.parameters()),
-                                                lr=opt.lr, betas=(opt.beta1, 0.999))
-            self.optimizer_D = torch.optim.Adam(itertools.chain(self.netD_A.parameters(), self.netD_B.parameters()), lr=opt.lr, betas=(opt.beta1, 0.999))
-            self.optimizers = []
-            self.schedulers = []
-            self.optimizers.append(self.optimizer_G)
-            self.optimizers.append(self.optimizer_D)
-            for optimizer in self.optimizers:
-                self.schedulers.append(networks.get_scheduler(optimizer, opt))
+            if (i+1) == len(losses.keys()):
+                sys.stdout.write('%s: %.4f -- ' % (loss_name, self.losses[loss_name]/self.batch))
+            else:
+                sys.stdout.write('%s: %.4f | ' % (loss_name, self.losses[loss_name]/self.batch))
 
-        self.print_networks(opt.verbose)
+        batches_done = self.batches_epoch*(self.epoch - 1) + self.batch
+        batches_left = self.batches_epoch*(self.n_epochs - self.epoch) + self.batches_epoch - self.batch 
+        sys.stdout.write('ETA: %s' % (datetime.timedelta(seconds=batches_left*self.mean_period/batches_done)))
 
-    def set_input(self, input):
-        AtoB = self.opt.which_direction == 'AtoB'
-        input_A = input['A' if AtoB else 'B']
-        input_B = input['B' if AtoB else 'A']
-        if len(self.gpu_ids) > 0:
-            input_A = input_A.cuda(self.gpu_ids[0], async=True)
-            input_B = input_B.cuda(self.gpu_ids[0], async=True)
-        self.input_A = input_A
-        self.input_B = input_B
-        self.image_paths = input['A_paths' if AtoB else 'B_paths']
+        # Draw images
+        for image_name, tensor in images.items():
+            if image_name not in self.image_windows:
+                self.image_windows[image_name] = self.viz.image(tensor2image(tensor.data), opts={'title':image_name})
+            else:
+                self.viz.image(tensor2image(tensor.data), win=self.image_windows[image_name], opts={'title':image_name})
 
-    def forward(self):
-        self.real_A = Variable(self.input_A)
-        self.real_B = Variable(self.input_B)
+        # End of epoch
+        if (self.batch % self.batches_epoch) == 0:
+            # Plot losses
+            for loss_name, loss in self.losses.items():
+                if loss_name not in self.loss_windows:
+                    self.loss_windows[loss_name] = self.viz.line(X=np.array([self.epoch]), Y=np.array([loss/self.batch]), 
+                                                                    opts={'xlabel': 'epochs', 'ylabel': loss_name, 'title': loss_name})
+                else:
+                    self.viz.line(X=np.array([self.epoch]), Y=np.array([loss/self.batch]), win=self.loss_windows[loss_name], update='append')
+                # Reset losses for next epoch
+                self.losses[loss_name] = 0.0
 
-    def test(self):
-        real_A = Variable(self.input_A, volatile=True)
-        self.fake_B = self.netG_A(real_A)
-        self.rec_A = self.netG_B(self.fake_B)
-
-        real_B = Variable(self.input_B, volatile=True)
-        self.fake_A = self.netG_B(real_B)
-        self.rec_B = self.netG_A(self.fake_A)
-
-    # get image paths
-    def get_image_paths(self):
-        return self.image_paths
-
-    def backward_D_basic(self, netD, real, fake):
-        # Real
-        pred_real = netD(real)
-        loss_D_real = self.criterionGAN(pred_real, True)
-        # Fake
-        pred_fake = netD(fake.detach())
-        loss_D_fake = self.criterionGAN(pred_fake, False)
-        # Combined loss
-        loss_D = (loss_D_real + loss_D_fake) * 0.5
-        # backward
-        loss_D.backward()
-        return loss_D
-
-    def backward_D_A(self):
-        fake_B = self.fake_B_pool.query(self.fake_B)
-        self.loss_D_A = self.backward_D_basic(self.netD_A, self.real_B, fake_B)
-
-    def backward_D_B(self):
-        fake_A = self.fake_A_pool.query(self.fake_A)
-        self.loss_D_B = self.backward_D_basic(self.netD_B, self.real_A, fake_A)
-
-    def backward_G(self):
-        lambda_idt = self.opt.lambda_identity
-        lambda_A = self.opt.lambda_A
-        lambda_B = self.opt.lambda_B
-        # Identity loss
-        if lambda_idt > 0:
-            # G_A should be identity if real_B is fed.
-            self.idt_A = self.netG_A(self.real_B)
-            self.loss_idt_A = self.criterionIdt(self.idt_A, self.real_B) * lambda_B * lambda_idt
-            # G_B should be identity if real_A is fed.
-            self.idt_B = self.netG_B(self.real_A)
-            self.loss_idt_B = self.criterionIdt(self.idt_B, self.real_A) * lambda_A * lambda_idt
+            self.epoch += 1
+            self.batch = 1
+            sys.stdout.write('\n')
         else:
-            self.loss_idt_A = 0
-            self.loss_idt_B = 0
+            self.batch += 1
 
-        # GAN loss D_A(G_A(A))
-        self.fake_B = self.netG_A(self.real_A)
-        self.loss_G_A = self.criterionGAN(self.netD_A(self.fake_B), True)
+        
 
-        # GAN loss D_B(G_B(B))
-        self.fake_A = self.netG_B(self.real_B)
-        self.loss_G_B = self.criterionGAN(self.netD_B(self.fake_A), True)
+class ReplayBuffer():
+    def __init__(self, max_size=50):
+        assert (max_size > 0), 'Empty buffer or trying to create a black hole. Be careful.'
+        self.max_size = max_size
+        self.data = []
 
-        # Forward cycle loss
-        self.rec_A = self.netG_B(self.fake_B)
-        self.loss_cycle_A = self.criterionCycle(self.rec_A, self.real_A) * lambda_A
+    def push_and_pop(self, data):
+        to_return = []
+        for element in data.data:
+            element = torch.unsqueeze(element, 0)
+            if len(self.data) < self.max_size:
+                self.data.append(element)
+                to_return.append(element)
+            else:
+                if random.uniform(0,1) > 0.5:
+                    i = random.randint(0, self.max_size-1)
+                    to_return.append(self.data[i].clone())
+                    self.data[i] = element
+                else:
+                    to_return.append(element)
+        return Variable(torch.cat(to_return))
 
-        # Backward cycle loss
-        self.rec_B = self.netG_A(self.fake_A)
-        self.loss_cycle_B = self.criterionCycle(self.rec_B, self.real_B) * lambda_B
-        # combined loss
-        self.loss_G = self.loss_G_A + self.loss_G_B + self.loss_cycle_A + self.loss_cycle_B + self.loss_idt_A + self.loss_idt_B
-        self.loss_G.backward()
+class LambdaLR():
+    def __init__(self, n_epochs, offset, decay_start_epoch):
+        assert ((n_epochs - decay_start_epoch) > 0), "Decay must start before the training session ends!"
+        self.n_epochs = n_epochs
+        self.offset = offset
+        self.decay_start_epoch = decay_start_epoch
 
-    def optimize_parameters(self):
-        # forward
-        self.forward()
-        # G_A and G_B
-        self.optimizer_G.zero_grad()
-        self.backward_G()
-        self.optimizer_G.step()
-        # D_A and D_B
-        self.optimizer_D.zero_grad()
-        self.backward_D_A()
-        self.backward_D_B()
-self.optimizer_D.step()
+    def step(self, epoch):
+        return 1.0 - max(0, epoch + self.offset - self.decay_start_epoch)/(self.n_epochs - self.decay_start_epoch)
+
+def weights_init_normal(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        torch.nn.init.normal(m.weight.data, 0.0, 0.02)
+    elif classname.find('BatchNorm2d') != -1:
+        torch.nn.init.normal(m.weight.data, 1.0, 0.02)
+        torch.nn.init.constant(m.bias.data, 0.0)
+
+###### Definition of variables ######
+# Networks
+netG_A2B = Generator(opt.input_nc, opt.output_nc)
+netG_B2A = Generator(opt.output_nc, opt.input_nc)
+netD_A = Discriminator(opt.input_nc)
+netD_B = Discriminator(opt.output_nc)
+
+if opt.cuda:
+    netG_A2B.cuda()
+    netG_B2A.cuda()
+    netD_A.cuda()
+    netD_B.cuda()
+
+netG_A2B.apply(weights_init_normal)
+netG_B2A.apply(weights_init_normal)
+netD_A.apply(weights_init_normal)
+netD_B.apply(weights_init_normal)
+
+# Lossess
+criterion_GAN = torch.nn.MSELoss()
+criterion_cycle = torch.nn.L1Loss()
+criterion_identity = torch.nn.L1Loss()
+
+# Optimizers & LR schedulers
+optimizer_G = torch.optim.Adam(itertools.chain(netG_A2B.parameters(), netG_B2A.parameters()),
+                                lr=opt.lr, betas=(0.5, 0.999))
+optimizer_D_A = torch.optim.Adam(netD_A.parameters(), lr=opt.lr, betas=(0.5, 0.999))
+optimizer_D_B = torch.optim.Adam(netD_B.parameters(), lr=opt.lr, betas=(0.5, 0.999))
+
+lr_scheduler_G = torch.optim.lr_scheduler.LambdaLR(optimizer_G, lr_lambda=LambdaLR(opt.n_epochs, opt.epoch, opt.decay_epoch).step)
+lr_scheduler_D_A = torch.optim.lr_scheduler.LambdaLR(optimizer_D_A, lr_lambda=LambdaLR(opt.n_epochs, opt.epoch, opt.decay_epoch).step)
+lr_scheduler_D_B = torch.optim.lr_scheduler.LambdaLR(optimizer_D_B, lr_lambda=LambdaLR(opt.n_epochs, opt.epoch, opt.decay_epoch).step)
+
+# Inputs & targets memory allocation
+Tensor = torch.cuda.FloatTensor if opt.cuda else torch.Tensor
+input_A = Tensor(opt.batchSize, opt.input_nc, opt.size, opt.size)
+input_B = Tensor(opt.batchSize, opt.output_nc, opt.size, opt.size)
+target_real = Variable(Tensor(opt.batchSize).fill_(1.0), requires_grad=False)
+target_fake = Variable(Tensor(opt.batchSize).fill_(0.0), requires_grad=False)
+
+fake_A_buffer = ReplayBuffer()
+fake_B_buffer = ReplayBuffer()
+
+# Dataset loader
+transforms_ = [ transforms.Resize(int(opt.size*1.12), Image.BICUBIC), 
+                transforms.RandomCrop(opt.size), 
+                transforms.RandomHorizontalFlip(),
+                transforms.ToTensor(),
+                transforms.Normalize((0.5,0.5,0.5), (0.5,0.5,0.5)) ]
+dataloader = DataLoader(ImageDataset(opt.dataroot, transforms_=transforms_, unaligned=True), 
+                        batch_size=opt.batchSize, shuffle=True, num_workers=opt.n_cpu)
+
+# Loss plot
+logger = Logger(opt.n_epochs, len(dataloader))
+###################################
+
+###### Training ######
+for epoch in range(opt.epoch, opt.n_epochs):
+    for i, batch in enumerate(dataloader):
+        # Set model input
+        real_A = Variable(input_A.copy_(batch['A']))
+        real_B = Variable(input_B.copy_(batch['B']))
+
+        ###### Generators A2B and B2A ######
+        optimizer_G.zero_grad()
+
+        # Identity loss
+        # G_A2B(B) should equal B if real B is fed
+        same_B = netG_A2B(real_B)
+        loss_identity_B = criterion_identity(same_B, real_B)*5.0
+        # G_B2A(A) should equal A if real A is fed
+        same_A = netG_B2A(real_A)
+        loss_identity_A = criterion_identity(same_A, real_A)*5.0
+
+        # GAN loss
+        fake_B = netG_A2B(real_A)
+        pred_fake = netD_B(fake_B)
+        loss_GAN_A2B = criterion_GAN(pred_fake, target_real)
+
+        fake_A = netG_B2A(real_B)
+        pred_fake = netD_A(fake_A)
+        loss_GAN_B2A = criterion_GAN(pred_fake, target_real)
+
+        # Cycle loss
+        recovered_A = netG_B2A(fake_B)
+        loss_cycle_ABA = criterion_cycle(recovered_A, real_A)*10.0
+
+        recovered_B = netG_A2B(fake_A)
+        loss_cycle_BAB = criterion_cycle(recovered_B, real_B)*10.0
+
+        # Total loss
+        loss_G = loss_identity_A + loss_identity_B + loss_GAN_A2B + loss_GAN_B2A + loss_cycle_ABA + loss_cycle_BAB
+        loss_G.backward()
+        
+        optimizer_G.step()
+        ###################################
+
+        ###### Discriminator A ######
+        optimizer_D_A.zero_grad()
+
+        # Real loss
+        pred_real = netD_A(real_A)
+        loss_D_real = criterion_GAN(pred_real, target_real)
+
+        # Fake loss
+        fake_A = fake_A_buffer.push_and_pop(fake_A)
+        pred_fake = netD_A(fake_A.detach())
+        loss_D_fake = criterion_GAN(pred_fake, target_fake)
+
+        # Total loss
+        loss_D_A = (loss_D_real + loss_D_fake)*0.5
+        loss_D_A.backward()
+
+        optimizer_D_A.step()
+        ###################################
+
+        ###### Discriminator B ######
+        optimizer_D_B.zero_grad()
+
+        # Real loss
+        pred_real = netD_B(real_B)
+        loss_D_real = criterion_GAN(pred_real, target_real)
+        
+        # Fake loss
+        fake_B = fake_B_buffer.push_and_pop(fake_B)
+        pred_fake = netD_B(fake_B.detach())
+        loss_D_fake = criterion_GAN(pred_fake, target_fake)
+
+        # Total loss
+        loss_D_B = (loss_D_real + loss_D_fake)*0.5
+        loss_D_B.backward()
+
+        optimizer_D_B.step()
+        ###################################
+
+        # Progress report (http://localhost:8097)
+        logger.log({'loss_G': loss_G, 'loss_G_identity': (loss_identity_A + loss_identity_B), 'loss_G_GAN': (loss_GAN_A2B + loss_GAN_B2A),
+                    'loss_G_cycle': (loss_cycle_ABA + loss_cycle_BAB), 'loss_D': (loss_D_A + loss_D_B)}, 
+                    images={'real_A': real_A, 'real_B': real_B, 'fake_A': fake_A, 'fake_B': fake_B})
+
+    # Update learning rates
+    lr_scheduler_G.step()
+    lr_scheduler_D_A.step()
+    lr_scheduler_D_B.step()
+
+    # Save models checkpoints
+    torch.save(netG_A2B.state_dict(), 'output/netG_A2B.pth')
+    torch.save(netG_B2A.state_dict(), 'output/netG_B2A.pth')
+    torch.save(netD_A.state_dict(), 'output/netD_A.pth')
+    torch.save(netD_B.state_dict(), 'output/netD_B.pth')
+###################################
