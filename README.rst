@@ -1,6 +1,8 @@
-***************************
-HandsOnDeepLearningWithPytorch [Version 1.0 to be out by August '18]
-***************************
+******************************
+HandsOnDeepLearningWithPytorch
+******************************
+[Version 1.0 to be out by August '18]
+"""""""""""""""""""""""""""""""""""""
 
 Code used for the book
 ======================
