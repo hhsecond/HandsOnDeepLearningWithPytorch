@@ -1,21 +1,21 @@
 ***************************
-ThePyTorchBook [InComplete]
+HandsOnDeepLearningWithPytorch [Version 1.0 to be out by August '18]
 ***************************
 
 Code used for the book
 ======================
 
-Repository is arranged chapter wise and each folder includes the code used + the visualization of models used. Visualization is created by using `FlashLight`_. Dataset used for the models are either available in the shared `box`_ folder or downloadable from the ``torch`` utility packages such as ``torchvision``, ``torchtext`` or ``torchaudio``
+Repository is arranged chapter wise and each folder includes the code used + the visualization of models used. One of the greatest introduction of the book is the AI exploration platform `TuringNetwork`_. Dataset used for the models are either available in the shared `box`_ folder or downloadable from the ``torch`` utility packages such as ``torchvision``, ``torchtext`` or ``torchaudio``
 
 .. _box: https://app.box.com/s/25ict2irqaz3nnd19qp8ymtmkwx3l61j
 
-.. _FlashLight: https://github.com/dlguys/flashlight
+.. _TuringNetwork: https://github.com/dlguys/flashlight
 
 Chapters
 --------
 #. Introduction
 #. A Simple Neural Network
-#. Nuts And Bolts
+#. Deep Learning work flow
 #. Computer Vision
 #. Sequential Data Processing
 #. Generative Networks
@@ -25,9 +25,9 @@ Chapters
 
 Utilities
 ---------
-* Visualization is handled by FlashLight - ::
+* Visualization is handled by TuringNetwork - ::
 
-    pip install flashlight
+    pip install turingnetwork
 * Environment is handled by Pipenv - ::
 
     pip install pipenv
@@ -36,9 +36,9 @@ Usage
 -----
 * Clone the repository ::
 
-    git clone https://github.com/hhsecond/ThePyTorchBook.git && cd ThePyTorchBook
+    git clone https://github.com/hhsecond/HandsOnDeepLearningWithPytorch.git && cd HandsOnDeepLearningWithPytorch
 
-* Install dependancies. ThePyTorchBook is using python3.6 and pipenv for package management ::
+* Install dependancies. HandsOnDeepLearningWithPytorch is using python3.7 and pipenv for package management ::
 
     pipenv install
 

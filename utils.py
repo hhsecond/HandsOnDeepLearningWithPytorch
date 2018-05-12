@@ -15,7 +15,7 @@ def balckandwhite_pedestrians(img_path):
 
 if __name__ == '__main__':
     counter = 0
-    path = '/home/hhsecond/mypro/ThePyTorchBook/ThePyTorchBookDataSet/camvid/'
+    path = '/home/hhsecond/mypro/ThePyTorchBook/HandsOnDeepLearningWithPytorch/camvid/'
     for folder in os.listdir(path):
         for image in os.listdir(os.path.join(path, folder, 'labels')):
             counter += 1
