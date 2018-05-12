@@ -2,16 +2,13 @@
 HandsOnDeepLearningWithPytorch
 ******************************
 [Version 1.0 to be out by August '18]
-"""""""""""""""""""""""""""""""""""""
-
-Code used for the book
-======================
++++++++++++++++++++++++++++++++++++++
 
 Repository is arranged chapter wise and each folder includes the code used + the visualization of models used. One of the greatest introduction of the book is the AI exploration platform `TuringNetwork`_. Dataset used for the models are either available in the shared `box`_ folder or downloadable from the ``torch`` utility packages such as ``torchvision``, ``torchtext`` or ``torchaudio``
 
 .. _box: https://app.box.com/s/25ict2irqaz3nnd19qp8ymtmkwx3l61j
 
-.. _TuringNetwork: https://github.com/dlguys/flashlight
+.. _TuringNetwork: https://github.com/turingnetworkai/turingnetwork
 
 Chapters
 --------
