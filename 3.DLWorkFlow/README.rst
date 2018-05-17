@@ -16,9 +16,8 @@ DL WorkFlow
 			- profiler
 	- Training & validation - splits again part of data loaders
 		- Ignite 3
-		- Distributed PyTorch 2
-		- Building Optimizers and dealing with GPU 1
 	- Publish and ship - covers in pytorch to production
+		- Distributed PyTorch 2
 		- Checkpointing
 		- Loading and dumping models (storage.cude('device'))
 		- Compilation and JIT

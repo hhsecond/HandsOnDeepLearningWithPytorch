@@ -2,7 +2,6 @@ import time
 import torch
 from torch import nn
 import torch.nn.functional as F
-from torch import jit
 import torch.optim as optim
 import numpy as np
 
@@ -92,15 +91,14 @@ y = torch.from_numpy(trY).type(dtype)
 net = FizBuzNet(input_size, 4)
 loss_fn = nn.MSELoss()
 optimizer = optim.Adam(net.parameters(), lr=lr)
-no_of_batches = int(len(trX) / batches)
-for epoch in range(epochs):
-    for batch in range(no_of_batches):
-        optimizer.zero_grad()
-        start = batch * batches
-        end = start + batches
-        x_ = x[start:end]
-        y_ = y[start:end]
-        hyp = net(x_)
-        loss = loss_fn(hyp, y_)
-        loss.backward()
-        optimizer.step()
+x_ = x[0:10]
+y_ = y[0:10]
+with torch.autograd.profiler.profile() as prof:
+    hyp = net(x_)
+loss = loss_fn(hyp, y_)
+loss.backward()
+optimizer.step()
+print(prof)
+prof.export_chrome_trace('chrometrace')
+print(prof.key_averages())
+print(prof.table('cpu_time'))
