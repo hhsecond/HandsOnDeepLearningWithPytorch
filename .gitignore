@@ -105,3 +105,4 @@ ENV/
 data
 processed
 raw
+.vector_cache
