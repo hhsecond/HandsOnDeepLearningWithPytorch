@@ -21,13 +21,16 @@ def downloadTREC(path='.'):
     dataset = torchtext.datasets.TREC('somedummyfile', TEXT, LABEL)
     dataset.download(path)
 
+# downloadTREC()
+
+
+spacy_en = spacy.load('en')
+
 
 def tokenizer(text):
     return [tok.text for tok in spacy_en.tokenizer(text)]
 
 
-# downloadTREC()
-spacy_en = spacy.load('en')
 TEXT = data.Field(sequential=True, tokenize=tokenizer, lower=True)
 LABEL = data.Field(sequential=False, use_vocab=True)
 
@@ -42,6 +45,7 @@ LABEL.build_vocab(train, vectors="glove.6B.50d")
 train_iter, val_iter, test_iter = data.Iterator.splits(
     (train, val, test), sort_key=lambda x: len(x.Text),
     batch_sizes=(32, 99, 99), device=-1)
+
 
 print(next(iter(test_iter)))
 

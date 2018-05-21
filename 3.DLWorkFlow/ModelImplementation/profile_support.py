@@ -93,12 +93,16 @@ loss_fn = nn.MSELoss()
 optimizer = optim.Adam(net.parameters(), lr=lr)
 x_ = x[0:10]
 y_ = y[0:10]
+
 with torch.autograd.profiler.profile() as prof:
     hyp = net(x_)
-loss = loss_fn(hyp, y_)
-loss.backward()
-optimizer.step()
+
 print(prof)
 prof.export_chrome_trace('chrometrace')
 print(prof.key_averages())
 print(prof.table('cpu_time'))
+
+
+loss = loss_fn(hyp, y_)
+loss.backward()
+optimizer.step()
