@@ -10,11 +10,11 @@ DL WorkFlow
 	- Implements model
 		- Interfacing with environements (from soumith video, I suspect is with GYM) 2
 			- any env with python api (show some example)
-		- Saving checkpoints or intermediate stages 1
 		- Debugging and profiling 3
 			- bottleneck
 			- profiler
 	- Training & validation - splits again part of data loaders
+		- Saving checkpoints or intermediate stages 1
 		- Ignite 3
 	- Publish and ship - covers in pytorch to production
 		- Distributed PyTorch 2
