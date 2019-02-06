@@ -22,3 +22,7 @@ DL WorkFlow
 		- Loading and dumping models (storage.cude('device'))
 		- Compilation and JIT
 		- Saving model - equivalant to checkpointing in TF
+
+TODO
+K fold
+Plotting validation and testing score

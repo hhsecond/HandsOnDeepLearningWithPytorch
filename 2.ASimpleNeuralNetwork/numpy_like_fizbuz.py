@@ -1,35 +1,14 @@
-##########################################################################
-##########################################################################
-# Author: Sherin Thomas
-# PyTorch Version 0.2
-# Program for predicting the next number whether its a
-# fiz or buz or fizbuz
-# The original post written the idea of fizbuz in neural network:
-#       http://joelgrus.com/2016/05/23/fizz-buzz-in-tensorflow/
-#
-#
-#
-# incase you haven't played this game, you had the worst childhood,
-# but don't worry, here are the rules.
-#
-# number divisible by 3 is fiz
-# number divisible by 5 is buz
-# number divisible by both 3 and 5 is fizbuz
-# other numbers should be considered as that number itself
-###########################################################################
-###########################################################################
-
 import torch
 
 from datautils import get_data, decoder, check_fizbuz
 
 
-input_size = 10
-output_size = 4
-hidden_units = 100
-epochs = 1
+epochs = 500
 batches = 64
 lr = 0.01
+input_size = 10
+output_size = 4
+hidden_size = 100
 
 
 trX, trY, teX, teY = get_data(input_size)
@@ -44,13 +23,13 @@ y = torch.from_numpy(trY).type(dtype)
 print(x.grad, x.grad_fn, x)
 # None, None, [torch.FloatTensor of size 900x10]
 
-w1 = torch.randn(input_size, hidden_units, requires_grad=True).type(dtype)
-w2 = torch.randn(hidden_units, output_size, requires_grad=True).type(dtype)
+w1 = torch.randn(input_size, hidden_size, requires_grad=True).type(dtype)
+w2 = torch.randn(hidden_size, output_size, requires_grad=True).type(dtype)
 
 print(w1.grad, w1.grad_fn, w1)
 # None, None, [torch.FloatTensor of size 10x100]
 
-b1 = torch.zeros(1, hidden_units, requires_grad=True).type(dtype)
+b1 = torch.zeros(1, hidden_size, requires_grad=True).type(dtype)
 b2 = torch.zeros(1, output_size, requires_grad=True).type(dtype)
 
 no_of_batches = int(len(trX) / batches)

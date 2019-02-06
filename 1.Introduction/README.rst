@@ -2,7 +2,8 @@
 Introduction
 ************
 - PyTorch imperative, tensorflow eager, JIT of PYTorch, GLUON
-
+- Different type of datasets and different dimensions (can be moved to each chapter)
+- Key attributes of a tensor - Shape, rank, dimension, data type
 
 - Find how pytorch choose best algorithm based on input data (probably size of input):
 	https://devblogs.nvidia.com/optimizing-recurrent-neural-networks-cudnn-5/

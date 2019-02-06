@@ -1,15 +1,16 @@
 import time
 import torch
 from torch import nn
-import torch.nn.functional as F
 import torch.optim as optim
 
-from datautils import get_data, decoder, check_fizbuz
+from datautils import get_pytorch_data, decoder, check_fizbuz
 
 epochs = 500
 batches = 64
 lr = 0.01
 input_size = 10
+output_size = 4
+hidden_size = 100
 
 
 class FizBuzNet(nn.Module):
@@ -19,20 +20,19 @@ class FizBuzNet(nn.Module):
     param: output_size -> int
     """
 
-    def __init__(self, input_size, output_size):
+    def __init__(self, input_size, hidden_size, output_size):
         super(FizBuzNet, self).__init__()
-        hidden_size = 100
         self.hidden = nn.Linear(input_size, hidden_size)
         self.out = nn.Linear(hidden_size, output_size)
 
     def forward(self, batch):
         hidden = self.hidden(batch)
-        activated = F.sigmoid(hidden)
+        activated = torch.sigmoid(hidden)
         out = self.out(activated)
         return out
 
 
-trX, trY, teX, teY = get_data(input_size, limit=1000)
+trX, trY, teX, teY = get_pytorch_data(input_size, limit=1000)
 if torch.cuda.is_available():
     xtype = torch.cuda.FloatTensor
     ytype = torch.cuda.LongTensor
@@ -42,14 +42,13 @@ else:
 x = torch.from_numpy(trX).type(xtype)
 y = torch.from_numpy(trY).type(ytype)
 
-net = FizBuzNet(input_size, 4)
+net = FizBuzNet(input_size, hidden_size, output_size)
 loss_fn = nn.CrossEntropyLoss()
 optimizer = optim.Adam(net.parameters(), lr=lr)
 total_time = []
 no_of_batches = int(len(trX) / batches)
 for epoch in range(epochs):
     for batch in range(no_of_batches):
-        optimizer.zero_grad()
         start = batch * batches
         end = start + batches
         x_ = x[start:end]
@@ -57,6 +56,7 @@ for epoch in range(epochs):
         start = time.time()
         hyp = net(x_)
         loss = loss_fn(hyp, y_)
+        optimizer.zero_grad()
         loss.backward()
         total_time.append(time.time() - start)
         optimizer.step()
@@ -82,3 +82,5 @@ with torch.no_grad():
     print('Test loss: ', output.item() / len(x))
     accuracy = hyp.max(1)[1] == y
     print('accuracy: ', accuracy.sum().item() / len(accuracy))
+
+torch.save(net.state_dict(), 'fizbuz_model.pth')
