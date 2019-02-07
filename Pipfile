@@ -11,6 +11,8 @@ mxnet = "*"
 mxnet-mkl = "*"
 mxnet-model-server = "*"
 flask = "*"
+netron = "*"
+model-archiver = {extras = ["onnx"], version = "*"}
 
 [dev-packages]
 

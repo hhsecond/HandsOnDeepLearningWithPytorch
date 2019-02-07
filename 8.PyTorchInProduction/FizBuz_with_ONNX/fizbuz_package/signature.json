@@ -1,0 +1,21 @@
+{
+  "inputs": [
+    {
+      "data_name": "input.1",
+      "data_shape": [
+        1,
+        10
+      ]
+    }
+  ],
+  "input_type": "application/json",
+  "outputs": [
+    {
+      "data_name": "next_number",
+      "data_shape": [
+        1
+      ]
+    }
+  ],
+  "output_type": "application/json"
+}
