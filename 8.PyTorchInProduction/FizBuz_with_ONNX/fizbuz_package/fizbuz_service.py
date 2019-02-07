@@ -4,37 +4,24 @@ import os
 import mxnet as mx
 from mxnet.io import DataBatch
 
-import logging
 import time
-
-path = '/home/sherin/mypro/mxnet-model-server/myprologger'
-logger = logging.getLogger('somelogger')
-lhandler = logging.FileHandler(path)
-logger.addHandler(lhandler)
-level = logging.getLevelName('DEBUG')
-logger.setLevel(level)
 
 
 class MXNetModelService(object):
 
     def __init__(self):
-        super(MXNetModelService, self).__init__()
         self.mxnet_ctx = None
         self.mx_model = None
-        self.labels = None
         self.signature = None
         self.epoch = 0
         self.error = None
 
-    # noinspection PyMethodMayBeStatic
     def get_model_files_prefix(self, context):
         return context.manifest["model"]["modelName"]
 
-    def binary_encoder(self, input_size):
-        def wrapper(num):
-            ret = [int(i) for i in '{0:b}'.format(num)]
-            return [0] * (input_size - len(ret)) + ret
-        return wrapper
+    def binary_encoder(self, input_num, input_size):
+        ret = [int(i) for i in '{0:b}'.format(input_num)]
+        return [0] * (input_size - len(ret)) + ret
 
     def get_readable_output(self, input_num, prediction):
         input_output_map = {
@@ -47,13 +34,6 @@ class MXNetModelService(object):
             return input_output_map[prediction]
 
     def initialize(self, context):
-        """
-        Initialize model. This will be called during model loading time
-
-        :param context: Initial context contains model server system properties.
-        :return:
-        """
-
         # todo - check batch size and read it from the message
 
         properties = context.system_properties
@@ -99,30 +79,15 @@ class MXNetModelService(object):
         self.has_initialized = True
 
     def preprocess(self, batch):
-        """
-        Transform raw input into model input data.
-
-        :param batch: list of raw requests, should match batch size
-        :return: list of preprocessed model input data
-        """
         # todo - assert batch size
 
         param_name = self.signature['inputs'][0]['data_name']
         data = batch[0].get('body').get(param_name)
         self.input = data + 1
-        tensor = mx.nd.array([self.binary_encoder(input_size=10)(self.input)])
+        tensor = mx.nd.array([self.binary_encoder(self.input, input_size=10)])
         return tensor
 
     def inference(self, model_input):
-        """
-        Internal inference methods for MXNet. Run forward computation and
-        return output.
-
-        :param model_input: list of NDArray
-            Preprocessed inputs in NDArray format.
-        :return: list of NDArray
-            Inference output.
-        """
         if self.error is not None:
             return None
 
@@ -151,14 +116,6 @@ class MXNetModelService(object):
         return out
 
     def handle(self, data, context):
-        """
-        Custom service entry point function.
-
-        :param data: list of objects, raw input from request
-        :param context: model server context
-        :return: list of outputs to be send back to client
-        """
-
         try:
             if not self.has_initialized:
                 self.initialize()
