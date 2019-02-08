@@ -1,14 +1,18 @@
 import json
 
 from flask import Flask
+from flask import request
 
 import controller
 
 app = Flask('FizBuzAPI')
 
 
-@app.route('/<which>')
-def predict(which):
+@app.route('/predictions/fizbuz_package', methods=['POST'])
+def predict():
+    which = request.get_json().get('input.1')
+    if not which:
+        return "InvalidData"
     try:
         number = int(which) + 1
         prediction = controller.run(number)

@@ -83,9 +83,11 @@ class MXNetModelService(object):
 
         param_name = self.signature['inputs'][0]['data_name']
         data = batch[0].get('body').get(param_name)
-        self.input = data + 1
-        tensor = mx.nd.array([self.binary_encoder(self.input, input_size=10)])
-        return tensor
+        if data:
+            self.input = data + 1
+            tensor = mx.nd.array([self.binary_encoder(self.input, input_size=10)])
+            return tensor
+        self.error = 'InvalidData'
 
     def inference(self, model_input):
         if self.error is not None:

@@ -32,6 +32,9 @@ encoder = binary_encoder()
 
 def run(number):
     binary = torch.Tensor([encoder(number)])
+    # torch.onnx.export(net, binary, "fizbuz.onnx", verbose=True)
+    # traced = torch.jit.trace(net, binary)
+    # print(traced.graph)
     out = net(binary)[0].max(0)[1].item()
     print(number, out)
     return get_readable_output(number, out)

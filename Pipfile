@@ -13,6 +13,7 @@ mxnet-model-server = "*"
 flask = "*"
 netron = "*"
 model-archiver = {extras = ["onnx"], version = "*"}
+locustio = "*"
 
 [dev-packages]
 
