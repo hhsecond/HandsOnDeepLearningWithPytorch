@@ -24,9 +24,9 @@ Chapters
 
 Utilities
 ---------
-* Visualization is handled by TuringNetwork - ::
+* Visualization is handled by Netron - ::
 
-    pip install turingnetwork
+    pip install netron
 * Environment is handled by Pipenv - ::
 
     pip install pipenv
