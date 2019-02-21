@@ -1,7 +1,7 @@
 ******************************
 HandsOnDeepLearningWithPytorch
 ******************************
-[Version 1.0 to be out by August '18]
+[Version 1.0 to be out by March '19]
 +++++++++++++++++++++++++++++++++++++
 
 Repository is arranged chapter wise and each folder includes the code used + the visualization of models used. One of the greatest introduction of the book is the AI exploration platform `TuringNetwork`_. Dataset used for the models are either available in the shared `box`_ folder or downloadable from the ``torch`` utility packages such as ``torchvision``, ``torchtext`` or ``torchaudio``
@@ -24,9 +24,9 @@ Chapters
 
 Utilities
 ---------
-* Visualization is handled by TuringNetwork - ::
+* Visualization is handled by Netron - ::
 
-    pip install turingnetwork
+    pip install netron
 * Environment is handled by Pipenv - ::
 
     pip install pipenv
