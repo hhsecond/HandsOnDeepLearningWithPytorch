@@ -25,16 +25,17 @@ def binary_encoder():
 
 
 net = FizBuzNet(input_size, hidden_size, output_size)
-net.load_state_dict(torch.load('fizbuz_model.pth'))
+net.load_state_dict(torch.load('assets/fizbuz_model.pth'))
 net.eval()
 encoder = binary_encoder()
 
 
 def run(number):
-    binary = torch.Tensor([encoder(number)])
     # torch.onnx.export(net, binary, "fizbuz.onnx", verbose=True)
     # traced = torch.jit.trace(net, binary)
     # print(traced.graph)
-    out = net(binary)[0].max(0)[1].item()
+    with torch.no_grad():
+        binary = torch.Tensor([encoder(number)])
+        out = net(binary)[0].max(0)[1].item()
     print(number, out)
     return get_readable_output(number, out)
