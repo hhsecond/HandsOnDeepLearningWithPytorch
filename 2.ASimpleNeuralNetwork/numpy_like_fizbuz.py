@@ -54,6 +54,10 @@ for epoch in range(epochs):
 
         error = hyp - y_
         output = error.pow(2).sum() / 2.0
+        w1.grad.zero_()
+        w2.grad.zero_()
+        b1.grad.zero_()
+        b2.grad.zero_()
         output.backward()
 
         print(x.grad, x.grad_fn, x)
@@ -70,13 +74,9 @@ for epoch in range(epochs):
             w2 -= lr * w2.grad
             b1 -= lr * b1.grad
             b2 -= lr * b2.grad
-        w1.grad.zero_()
-        w2.grad.zero_()
-        b1.grad.zero_()
-        b2.grad.zero_()
     if epoch % 10:
         print(epoch, output.item())
-breakpoint()
+
 # traversing the graph using .grad_fn
 print(output.grad_fn)
 # <DivBackward0 object at 0x7eff00ae3ef0>
