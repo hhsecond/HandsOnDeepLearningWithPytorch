@@ -1,6 +1,5 @@
 import torch
 import torch.nn.functional as F
-from torch.autograd import Variable
 from torch.nn.parameter import Parameter
 from torch import nn
 
@@ -16,7 +15,8 @@ class Conv(nn.Module):
         self.kernel_size = kernel_size
         self.stride = stride
         self.padding = padding
-        self.weight = Parameter(torch.Tensor(out_channels, in_channels, kernel_size, kernel_size))
+        self.weight = Parameter(
+            torch.Tensor(out_channels, in_channels, kernel_size, kernel_size))
         self.bias = Parameter(torch.zeros(out_channels))
 
     def forward(self, x):
@@ -32,7 +32,7 @@ class Conv(nn.Module):
         if height != width:
             raise Exception('Only processing square Image')
         # TODO - check whether this converts to cuda tensor if you call .cuda()
-        out = Variable(torch.zeros(batch_size, new_depth, new_height, new_width))
+        out = torch.zeros(batch_size, new_depth, new_height, new_width)
         padded_input = F.pad(x, (self.padding,) * 4)
         for nf, f in enumerate(self.weight):
             for h in range(new_height):
@@ -66,7 +66,7 @@ class MaxPool(nn.Module):
             raise Exception('Only processing square Image')
         if height % self.kernel_size != 0:
             raise Exception('Kernal cannot be moved completely, change Kernal size')
-        out = Variable(torch.zeros(batch_size, depth, new_height, new_width))
+        out = torch.zeros(batch_size, depth, new_height, new_width)
         for h in range(new_height):
             for w in range(new_width):
                 for d in range(depth):

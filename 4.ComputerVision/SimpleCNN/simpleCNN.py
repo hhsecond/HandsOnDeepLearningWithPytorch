@@ -1,24 +1,9 @@
 import torch
 from torch import nn
 from torch import optim
-from torch.autograd import Variable
 import torchvision
 import torchvision.transforms as transforms
 from simpleCNNModel import SimpleCNNModel
-
-
-"""
-things to write
-Convolution
-deconvolution - https://distill.pub/2016/deconv-checkerboard/
-How convoution arithmetic work
-1x1 conv > dim reduction, equivalence with fc
-stride > down sampling
-pool > down sampling (But trends are prefering strides over pooling)
-average pooling
-max pooling
-min pooling
-"""
 
 
 def get_data():
@@ -50,11 +35,11 @@ for epoch in range(2):
     for i, data in enumerate(trainloader, 0):
         inputs, labels = data
         optimizer.zero_grad()
-        outputs = net(Variable(inputs))
-        loss = loss_fn(outputs, Variable(labels))
+        outputs = net(inputs)
+        loss = loss_fn(outputs, labels)
         loss.backward()
         optimizer.step()
-        running_loss += loss.data[0]
+        running_loss += loss.item()
         check_interval = 2
         if i % check_interval == check_interval - 1:
             print('Iteration: {}, loss: {:.6f}'.format(
@@ -66,7 +51,7 @@ correct = 0
 total = 0
 for data in testloader:
     images, labels = data
-    outputs = net(Variable(images))
+    outputs = net(images)
     index, value = torch.max(outputs.data, 1)
     total += labels.size(0)
     correct += (value == labels).sum()
