@@ -57,7 +57,5 @@ class CamvidDataSet(data.Dataset):
 
 if __name__ == '__main__':
     loader = CamvidDataSet(
-        'train', '/home/hhsecond/mypro/ThePyTorchBook/ThePyTorchBookDataSet/camvid')
-    # TODO - Do it by using Lucent
-    # transforms.ToPILImage('RGB')(loader[1][1].byte()).save('image.png')
+        'train', '/home/sherin/mypro/HODLWP/ThePyTorchBookDataSet/camvid')
     print(loader[1][1])

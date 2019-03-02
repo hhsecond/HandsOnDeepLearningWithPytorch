@@ -1,6 +1,5 @@
 import torch
 from torch.utils import data
-from torch.autograd import Variable
 import time
 
 from torch import nn
@@ -23,7 +22,7 @@ if is_cuda:
 net.train()
 
 # Training
-path = '/home/hhsecond/mypro/ThePyTorchBook/ThePyTorchBookDataSet/camvid'
+path = '/home/sherin/mypro/HODLWP/ThePyTorchBookDataSet/camvid'
 epochs = 64
 bsize = 8
 dataset = CamvidDataSet('train', path)
@@ -47,23 +46,25 @@ for epoch in range(epochs):
         if is_cuda:
             in_batch, target_batch = in_batch.cuda(), target_batch.cuda()
         optimizer.zero_grad()
-        out = net(Variable(in_batch))
-        loss = loss_fn(F.log_softmax(out, 1), Variable(target_batch))
+        out = net(in_batch)
+        loss = loss_fn(F.log_softmax(out, 1), target_batch)
         loss.backward()
         optimizer.step()
-    print('Training Loss: {:.5f}, Epochs: {:3d}'.format(loss.data[0], epoch))
+    print('Training Loss: {:.5f}, Epochs: {:3d}'.format(loss.item(), epoch))
     if epoch % 50 == 0:
         net.eval()
         test_dataset = CamvidDataSet('test', path)
-        test_loader = data.DataLoader(test_dataset, batch_size=bsize, num_workers=4, shuffle=True)
+        test_loader = data.DataLoader(
+            test_dataset, batch_size=bsize, num_workers=4, shuffle=True)
         loss = 0
         counter = 0
         for in_batch, target_batch in test_loader:
             if is_cuda:
                 in_batch, target_batch = in_batch.cuda(), target_batch.cuda()
-            out = net(Variable(in_batch, volatile=True))
-            counter += 1
-            loss += loss_fn(F.log_softmax(out, 1), Variable(target_batch, volatile=True)).data[0]
+            with torch.no_grad():
+                out = net(in_batch)
+                counter += 1
+                loss += loss_fn(F.log_softmax(out, 1), target_batch).item()
         loss = loss / counter
         print(' ========== Testing Loss: {:.5f} =========='.format(loss, epoch))
         create_image(out)

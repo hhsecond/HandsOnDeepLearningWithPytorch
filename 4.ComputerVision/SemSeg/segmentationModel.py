@@ -13,7 +13,8 @@ class SegmentationModel(nn.Module):
 
     def __init__(self):
         super().__init__()
-        self.init_conv = ConvBlock(inp=3, out=64, kernal=7, stride=2, pad=3, bias=True, act=True)
+        self.init_conv = ConvBlock(
+            inp=3, out=64, kernal=7, stride=2, pad=3, bias=True, act=True)
         self.init_maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         self.encoder1 = EncoderBlock(inp=64, out=64)
@@ -27,7 +28,8 @@ class SegmentationModel(nn.Module):
         self.decoder1 = DecoderBlock(inp=64, out=64)
 
         self.final_deconv1 = DeconvBlock(inp=64, out=32, kernal=3, stride=2, pad=1)
-        self.final_conv = ConvBlock(inp=32, out=32, kernal=3, stride=1, pad=1, bias=True, act=True)
+        self.final_conv = ConvBlock(
+            inp=32, out=32, kernal=3, stride=1, pad=1, bias=True, act=True)
         self.final_deconv2 = DeconvBlock(inp=32, out=2, kernal=2, stride=2, pad=0)
 
     def forward(self, x):
