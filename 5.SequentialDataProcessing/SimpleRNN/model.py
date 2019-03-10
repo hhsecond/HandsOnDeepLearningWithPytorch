@@ -24,10 +24,9 @@ class RNNCell(nn.Module):
 
 class Encoder(nn.Module):
 
-    def __init__(self, config):
+    def __init__(self, embed_dim, vocab_dim, hidden_size):
         super(Encoder, self).__init__()
-        self.config = config
-        self.rnn = RNNCell(config.vocab_dim, config.hidden_size)
+        self.rnn = RNNCell(embed_dim, hidden_size, vocab_dim)
 
     def forward(self, inputs):
         ht = self.rnn.init_hidden()
@@ -53,9 +52,8 @@ class RNNClassifier(nn.Module):
 
     def __init__(self, config):
         super().__init__()
-        self.config = config
         self.embed = nn.Embedding(config.vocab_dim, config.embed_dim)
-        self.encoder = Encoder(config)
+        self.encoder = Encoder(config.embed_dim, config.vocab_dim, config.hidden_size)
         self.classifier = nn.Sequential(
             Merger(config.embed_dim, config.dropout),
             nn.Linear(4 * config.embed_dim, config.fc1_dim),

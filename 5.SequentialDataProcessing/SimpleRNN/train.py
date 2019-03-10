@@ -1,20 +1,19 @@
 import os
 import time
 from pathlib import Path
-import pdb
 from collections import namedtuple
 
 import torch
 from torch import optim
 import torch.nn as nn
 
-from torchtext import data
-from torchtext import datasets
+from torchtext import data, datasets
 
 from model import RNNClassifier
 
-
-ConfigGen = namedtuple('ConfigGen', 'vocab_dim out_dim cells birnn dropout fc1_dim, fc2_dim')
+ConfigGen = namedtuple(
+    'ConfigGen',
+    'vocab_dim out_dim cells birnn dropout fc1_dim fc2_dim embed_dim hidden_size')
 ConfigGen.__new__.__defaults__ = (None,) * len(ConfigGen._fields)
 USERHOME = str(Path.home())
 batch_size = 64
@@ -25,7 +24,6 @@ train, dev, test = datasets.SNLI.splits(inputs, answers)
 
 inputs.build_vocab(train, dev, test)
 vector = os.path.join(USERHOME, '.vector_cache', 'glove.6B.300d.txt.pt')
-pdb.set_trace()
 if os.path.isfile(vector):
     # TODO - make it customizable
     inputs.vocab.vectors = torch.load(vector)
@@ -38,7 +36,6 @@ train_iter, dev_iter, test_iter = data.BucketIterator.splits(
 
 vocab_dim = len(inputs.vocab)
 out_dim = len(answers.vocab)
-embed_dim = 300
 cells = 2
 # TODO - remove bidirectional RNN for simpleRNN
 birnn = True
@@ -47,9 +44,12 @@ epochs = 10
 if birnn:
     cells *= 2
 dropout = 0.5
-fc1_dim = 50,
+fc1_dim = 50
 fc2_dim = 3
-config = ConfigGen(vocab_dim, out_dim, cells, birnn, dropout, fc1_dim, fc2_dim)
+hidden_size = 1000
+embed_dim = 300
+config = ConfigGen(
+    vocab_dim, out_dim, cells, birnn, dropout, fc1_dim, fc2_dim, embed_dim, hidden_size)
 model = RNNClassifier(config)
 model.embed.weight.data = inputs.vocab.vectors
 # TODO - convert to cuda if required
