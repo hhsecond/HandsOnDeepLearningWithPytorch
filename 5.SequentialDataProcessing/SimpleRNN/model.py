@@ -32,6 +32,7 @@ class Encoder(nn.Module):
         ht = self.rnn.init_hidden()
         for word in inputs.split(1, dim=1):
             outputs, ht = self.rnn(word, ht)
+        return ht
 
 
 class Merger(nn.Module):

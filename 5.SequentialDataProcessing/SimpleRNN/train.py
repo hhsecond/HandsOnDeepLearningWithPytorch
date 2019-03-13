@@ -33,7 +33,9 @@ answers.build_vocab(train)
 
 train_iter, dev_iter, test_iter = data.BucketIterator.splits(
     (train, dev, test), batch_size=batch_size)
-
+train_iter.init_epoch()
+print(next(iter(train_iter)))
+exit()
 vocab_dim = len(inputs.vocab)
 out_dim = len(answers.vocab)
 cells = 2

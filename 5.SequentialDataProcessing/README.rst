@@ -1,3 +1,10 @@
+Make the code work
+Expalin bidirectional RNN
+Explain attention
+Expand SPINN
+
+
+
 **************************
 Sequential Data Processing
 **************************
