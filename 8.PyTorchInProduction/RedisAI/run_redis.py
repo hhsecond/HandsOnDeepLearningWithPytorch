@@ -1,7 +1,4 @@
 import numpy as np
-import redisai
-from redisai import Client, BlobTensor, Backend, Device, DType
-
 import redis
 
 def binary_encoder(input_size):
@@ -10,27 +7,32 @@ def binary_encoder(input_size):
         return np.array([[0] * (input_size - len(ret)) + ret], dtype=np.float32)
     return wrapper
 
-MODEL_PATH = 'fizbuz_model.pt'
-number = 3
 
+def get_readable_output(input_num, prediction):
+    input_output_map = {
+        0: 'FizBuz',
+        1: 'Buz',
+        2: 'Fiz'}
+    if prediction == 3:
+        return input_num
+    else:
+        return input_output_map[prediction]
+
+
+r = redis.Redis()
+MODEL_PATH = 'fizbuz_model.pt'
 with open(MODEL_PATH,'rb') as f:
 	model_pt = f.read()
-
+r.execute_command('AI.MODELSET', 'model', 'TORCH', 'CPU', model_pt)
 encoder = binary_encoder(10)
-inputs = encoder(number)
 
-client = Client()
-client.modelset('model', Backend.torch, Device.cpu, data=model_pt)
-print(inputs.shape)
-client.tensorset('a', BlobTensor(DType.float32, inputs.shape, inputs.tobytes()))
-client.modelrun('model', input='a', output='out')
-final = client.tensorget('out').value
-print(final)
+while True:
+	number = int(input('Enter number, press CTRL+c to exit: ')) + 1
+	inputs = encoder(number)
 
-# r = redis.Redis()
-# r.execute_command('AI.MODELSET', 'model', 'TORCH', 'CPU', model_pt)
-# r.execute_command(
-#     'AI.TENSORSET', 'a', 'FLOAT', *inputs.shape, 'BLOB', inputs.tobytes())
-# r.execute_command('AI.MODELRUN', 'model', 'INPUTS', 'a', 'OUTPUTS', 'out')
-# final = r.execute_command('AI.TENSORGET', 'out', 'VALUES')
-# print(final)
+	r.execute_command(
+	    'AI.TENSORSET', 'a', 'FLOAT', *inputs.shape, 'BLOB', inputs.tobytes())
+	r.execute_command('AI.MODELRUN', 'model', 'INPUTS', 'a', 'OUTPUTS', 'out')
+	typ, shape, buf = r.execute_command('AI.TENSORGET', 'out', 'BLOB')
+	prediction = np.frombuffer(buf, dtype=np.float32).argmax()
+	print(get_readable_output(number, prediction))
