@@ -12,8 +12,8 @@ from torchvision.transforms import Compose, ToTensor, Normalize
 from torchvision.datasets import MNIST
 
 from ignite.engine import Events, create_supervised_trainer, create_supervised_evaluator
-from ignite.metrics import CategoricalAccuracy, Loss
-from ignite.handlers import EngineCheckpoint
+from ignite.metrics import Accuracy, Loss
+from ignite.handlers import ModelCheckpoint
 
 
 class Net(nn.Module):
@@ -56,7 +56,7 @@ def run(train_batch_size, val_batch_size,
     optimizer = SGD(model.parameters(), lr=lr, momentum=momentum)
     trainer = create_supervised_trainer(model, optimizer, F.nll_loss, device=device)
     evaluator = create_supervised_evaluator(model,
-                                            metrics={'accuracy': CategoricalAccuracy(),
+                                            metrics={'accuracy': Accuracy(),
                                                      'nll': Loss(F.nll_loss)},
                                             device=device)
     # Setup debug level of engine logger:
@@ -96,15 +96,16 @@ def run(train_batch_size, val_batch_size,
               .format(engine.state.epoch, avg_accuracy, avg_nll))
 
     objects_to_checkpoint = {"model": model, "optimizer": optimizer}
-    engine_checkpoint = EngineCheckpoint(dirname="engine_checkpoint",
-                                         to_save=objects_to_checkpoint,
+    engine_checkpoint = ModelCheckpoint(dirname="engine_checkpoint",
+                                         filename_prefix='ignite_checking',
+                                         require_empty=False,
                                          save_interval=100)
-    trainer.add_event_handler(Events.ITERATION_COMPLETED, engine_checkpoint)
+    trainer.add_event_handler(Events.ITERATION_COMPLETED, engine_checkpoint, objects_to_checkpoint)
 
     if restore_from == "":
         trainer.run(train_loader, max_epochs=epochs)
     else:
-        trainer.resume(train_loader, restore_from, to_load=objects_to_checkpoint)
+        raise NotImplementedError('Not implemented yet')
 
 
 if __name__ == "__main__":
@@ -121,7 +122,6 @@ if __name__ == "__main__":
                         help='SGD momentum (default: 0.5)')
     parser.add_argument('--log_interval', type=int, default=300,
                         help='how many batches to wait before logging training status')
-    parser.add_argument('--restore_from', type=str, default="", help='restore trainer state from checkpoint')
     parser.add_argument('--crash_iteration', type=int, default=1000, help='Iteration to suddenly raise as exception')
     args = parser.parse_args()
 

@@ -10,8 +10,6 @@ from torchvision.transforms import Compose, ToTensor, Normalize
 from torchvision.datasets import MNIST
 
 from ignite.engine import Events, Engine
-from ignite.metrics import CategoricalAccuracy, Loss
-from ignite.handlers import EngineCheckpoint
 
 
 class Net(nn.Module):
