@@ -34,8 +34,6 @@ answers.build_vocab(train)
 train_iter, dev_iter, test_iter = data.BucketIterator.splits(
     (train, dev, test), batch_size=batch_size)
 train_iter.init_epoch()
-print(next(iter(train_iter)))
-exit()
 vocab_dim = len(inputs.vocab)
 out_dim = len(answers.vocab)
 cells = 2
@@ -51,7 +49,8 @@ fc2_dim = 3
 hidden_size = 1000
 embed_dim = 300
 config = ConfigGen(
-    vocab_dim, out_dim, cells, birnn, dropout, fc1_dim, fc2_dim, embed_dim, hidden_size)
+    vocab_dim, out_dim, cells, birnn,
+    dropout, fc1_dim, fc2_dim, embed_dim, hidden_size)
 model = RNNClassifier(config)
 model.embed.weight.data = inputs.vocab.vectors
 # TODO - convert to cuda if required
@@ -64,11 +63,11 @@ start = time.time()
 best_dev_acc = -1
 train_iter.repeat = False
 
+model.train()
 for epoch in range(epochs):
     train_iter.init_epoch()
     n_correct, n_total = 0, 0
     for batch_idx, batch in enumerate(train_iter):
-        model.train()
         opt.zero_grad()
         iterations += 1
         answer = model(batch)
@@ -76,7 +75,8 @@ for epoch in range(epochs):
                       [1].view(batch.label.size()) == batch.label).sum()
         n_total += batch.batch_size
         train_acc = 100. * n_correct / n_total
-        loss = criterion(answer, batch.label)
+        # labels starts from 1 but we need it to start from 0
+        loss = criterion(answer, batch.label - 1)
         loss.backward()
         opt.step()
         if iterations % 5 == 0:
@@ -85,7 +85,10 @@ for epoch in range(epochs):
             n_dev_correct, dev_loss = 0, 0
             for dev_batch_idx, dev_batch in enumerate(dev_iter):
                 answer = model(dev_batch)
-                n_dev_correct += (torch.max(answer, 1)
-                                  [1].view(dev_batch.label.size()) == dev_batch.label).sum()
-                dev_loss = criterion(answer, dev_batch.label)
+                n_dev_correct += (torch.max(
+                    answer, 1)[1].view(
+                        dev_batch.label.size()) == dev_batch.label).sum()
+                dev_loss = criterion(answer, dev_batch.label - 1)
             dev_acc = 100. * n_dev_correct / len(dev)
+            print(dev_acc.item())
+            model.train()
