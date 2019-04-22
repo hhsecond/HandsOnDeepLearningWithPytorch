@@ -1,5 +1,3 @@
-# copied from pytorch ignite source code
-from __future__ import print_function
 from argparse import ArgumentParser
 import logging
 
