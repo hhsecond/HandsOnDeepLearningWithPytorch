@@ -1,3 +1,5 @@
+import os
+
 import torch
 from torch.utils import data
 import time
@@ -9,9 +11,6 @@ from scipy import misc
 from dataset import CamvidDataSet
 from segmentationModel import SegmentationModel
 
-# The datafolder must be downloaed
-# The path to data folder must be correct
-# confusion matrix
 # TODO - solve the cuda run time issue
 
 
@@ -22,7 +21,9 @@ if is_cuda:
 net.train()
 
 # Training
-path = '/home/sherin/mypro/HODLWP/ThePyTorchBookDataSet/camvid'
+path = './data/camvid'
+if not os.path.exists(path):
+    raise RuntimeError(f"Please download and place the data in {path}")
 epochs = 64
 bsize = 8
 dataset = CamvidDataSet('train', path)

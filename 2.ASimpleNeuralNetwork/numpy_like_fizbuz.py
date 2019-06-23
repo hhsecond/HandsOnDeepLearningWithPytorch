@@ -12,25 +12,25 @@ hidden_size = 100
 
 
 trX, trY, teX, teY = get_numpy_data(input_size)
-if torch.cuda.is_available():
-    dtype = torch.cuda.FloatTensor
-else:
-    dtype = torch.FloatTensor
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+dtype = torch.float64
 
-x = torch.from_numpy(trX).type(dtype)
-y = torch.from_numpy(trY).type(dtype)
+
+x = torch.from_numpy(trX).to(device=device, dtype=dtype)
+y = torch.from_numpy(trY).to(device=device, dtype=dtype)
 
 print(x.grad, x.grad_fn, x)
 # None None tensor([[...]])
 
-w1 = torch.randn(input_size, hidden_size, requires_grad=True).type(dtype)
-w2 = torch.randn(hidden_size, output_size, requires_grad=True).type(dtype)
+
+w1 = torch.randn(input_size, hidden_size, requires_grad=True, device=device, dtype=dtype)
+w2 = torch.randn(hidden_size, output_size, requires_grad=True, device=device, dtype=dtype)
 
 print(w1.grad, w1.grad_fn, w1)
 # None None tensor([[...]])
 
-b1 = torch.zeros(1, hidden_size, requires_grad=True).type(dtype)
-b2 = torch.zeros(1, output_size, requires_grad=True).type(dtype)
+b1 = torch.zeros(1, hidden_size, requires_grad=True, device=device, dtype=dtype)
+b2 = torch.zeros(1, output_size, requires_grad=True, device=device, dtype=dtype)
 
 no_of_batches = int(len(trX) / batches)
 for epoch in range(epochs):
@@ -54,10 +54,6 @@ for epoch in range(epochs):
 
         error = hyp - y_
         output = error.pow(2).sum() / 2.0
-        w1.grad.zero_()
-        w2.grad.zero_()
-        b1.grad.zero_()
-        b2.grad.zero_()
         output.backward()
 
         print(x.grad, x.grad_fn, x)
@@ -74,6 +70,12 @@ for epoch in range(epochs):
             w2 -= lr * w2.grad
             b1 -= lr * b1.grad
             b2 -= lr * b2.grad
+        # Making gradients zero. This is essential otherwise, gradient
+        # from next iteration accumulates
+        w1.grad.zero_()
+        w2.grad.zero_()
+        b1.grad.zero_()
+        b2.grad.zero_()
     if epoch % 10:
         print(epoch, output.item())
 
@@ -88,8 +90,8 @@ print(output.grad_fn.next_functions[0][0].next_functions[0][0])
 
 # test
 with torch.no_grad():
-    x = torch.from_numpy(teX).type(dtype)
-    y = torch.from_numpy(teY).type(dtype)
+    x = torch.from_numpy(teX).to(device=device, dtype=dtype)
+    y = torch.from_numpy(teY).to(device=device, dtype=dtype)
 
     a2 = x.matmul(w1)
     a2 = a2.add(b1)

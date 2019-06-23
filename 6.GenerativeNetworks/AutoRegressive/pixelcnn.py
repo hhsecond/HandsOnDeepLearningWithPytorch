@@ -71,7 +71,7 @@ for epoch in range(25):
     err_tr = []
     net.train()
     for i, (input, _) in enumerate(train_data):
-        input.to(device=device)
+        input = input.to(device=device)
         target = (input.data[:, 0] * 255).long()
         loss = F.cross_entropy(net(input), target)
         print(loss.item())

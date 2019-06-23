@@ -55,9 +55,7 @@ def mu_law_decode(output, quantization_channels=256):
     mu = float(quantization_channels - 1)
 
     expanded = (output / quantization_channels) * 2. - 1
-    waveform = np.sign(expanded) * (
-                   np.exp(np.abs(expanded) * np.log(mu + 1)) - 1
-               ) / mu
+    waveform = np.sign(expanded) * (np.exp(np.abs(expanded) * np.log(mu + 1)) - 1) / mu
 
     return waveform
 

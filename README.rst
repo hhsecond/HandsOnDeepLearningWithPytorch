@@ -25,9 +25,7 @@ Utilities
 * Visualization is handled by Netron - ::
 
     pip install netron
-* Environment is handled by Pipenv - ::
-
-    pip install pipenv
+* Environment is handled by Pipenv
 
 Usage
 -----
@@ -35,9 +33,9 @@ Usage
 
     git clone https://github.com/hhsecond/HandsOnDeepLearningWithPytorch.git && cd HandsOnDeepLearningWithPytorch
 
-* Install dependancies. HandsOnDeepLearningWithPytorch is using python3.7 and pipenv for package management ::
+* Install dependancies. HandsOnDeepLearningWithPytorch is using conda with python3.7 ::
 
-    pipenv install
+    conda env create -f environment.yml
 
 * CD to chapter directores and execute the models
 

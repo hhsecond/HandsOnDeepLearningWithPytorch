@@ -1,7 +1,5 @@
-import time
 import torch
 from torch import nn
-import torch.nn.functional as F
 import torch.optim as optim
 import numpy as np
 
@@ -75,9 +73,9 @@ class FizBuzNet(nn.Module):
 
     def forward(self, batch):
         hidden = self.hidden(batch)
-        activated = F.sigmoid(hidden)
+        activated = torch.sigmoid(hidden)
         out = self.out(activated)
-        return F.sigmoid(out)
+        return torch.sigmoid(out)
 
 
 trX, trY, teX, teY = get_data(input_size)

@@ -10,7 +10,7 @@ class FizBuzDataset(Dataset):
             start (int): whole number from where the dataset starts counting, exclusive
             end (int): whole number till where the dataset keeps counting, inclusive
     """
-    input_size: int
+    input_size: int = 10
     start: int = 0
     end: int = 1000
 
@@ -45,8 +45,6 @@ if __name__ == '__main__':
     for i in range(len(dataset)):
         x, y = dataset[i]
 
-
     dataloader = DataLoader(dataset, batch_size=10, shuffle=True, num_workers=4)
     for batch in dataloader:
         print(batch)
-
