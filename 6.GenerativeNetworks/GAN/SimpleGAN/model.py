@@ -10,7 +10,7 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 def mnist_data():
     compose = transforms.Compose(
         [transforms.ToTensor(),
-         transforms.Normalize((.5, .5))])
+         transforms.Normalize((0.5,), (0.5,))])
     out_dir = '{}/dataset'.format(DATA_FOLDER)
     return datasets.MNIST(root=out_dir, train=True, transform=compose, download=True)
 
@@ -107,7 +107,7 @@ class GeneratorNet(torch.nn.Module):
 # Noise
 def noise(size):
     n = torch.randn(size, 100)
-    n.to(device)
+    return n.to(device)
 
 
 discriminator = DiscriminatorNet().to(device)
@@ -197,5 +197,6 @@ for epoch in range(num_epochs):
         fake_data = generator(noise(real_batch.size(0)))
         # Train G
         g_error = train_generator(g_optimizer, fake_data)
+        print(f'Error: {g_error}')
 
         # TODO Display Progress & error
