@@ -56,6 +56,15 @@ model.embed.weight.data = inputs.vocab.vectors
 # TODO - convert to cuda if required
 
 criterion = nn.CrossEntropyLoss()
+
+
+def init_weights(m):
+    if type(m) == nn.Linear:
+        torch.nn.init.xavier_uniform_(m.weight)
+        m.bias.data.fill_(0.01)
+
+
+model.apply(init_weights)  # xavier init: trying to avoid vanishing gradient
 opt = optim.Adam(model.parameters(), lr=lr)
 
 iterations = 0
@@ -71,6 +80,11 @@ for epoch in range(epochs):
         opt.zero_grad()
         iterations += 1
         answer = model(batch)
+        if torch.isnan(answer).any():
+            raise RuntimeWarning((
+                "Found NaN!. Vanishing Gradient kicked in. "
+                "Fixing that is not in the scope of this illustration. "
+                "You may raise an issue in github"))
         n_correct += (torch.max(answer, 1)
                       [1].view(batch.label.size()) == batch.label).sum()
         n_total += batch.batch_size
@@ -78,6 +92,7 @@ for epoch in range(epochs):
         # labels starts from 1 but we need it to start from 0
         loss = criterion(answer, batch.label - 1)
         loss.backward()
+        print(f"Loss: {loss.item()}")
         opt.step()
         if iterations % 5 == 0:
             model.eval()
@@ -87,7 +102,7 @@ for epoch in range(epochs):
                 answer = model(dev_batch)
                 n_dev_correct += (torch.max(
                     answer, 1)[1].view(
-                        dev_batch.label.size()) == dev_batch.label).sum()
+                        dev_batch.label.size()) == dev_batch.label - 1).sum()
                 dev_loss = criterion(answer, dev_batch.label - 1)
             dev_acc = 100. * n_dev_correct / len(dev)
             print(dev_acc.item())

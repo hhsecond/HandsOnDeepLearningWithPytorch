@@ -8,12 +8,14 @@ class RNNCell(nn.Module):
 
         self.hidden_size = hidden_size
         self.input2hidden = nn.Linear(embed_dim + hidden_size, hidden_size)
-        self.input2output = nn.Linear(embed_dim + hidden_size, vocab_dim)
-        self.softmax = nn.LogSoftmax(dim=1)
+        # Since it's encoder
+        # We are not concerened about output
+        # self.input2output = nn.Linear(embed_dim + hidden_size, vocab_dim)
+        # self.softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, inputs, hidden):
         combined = torch.cat((inputs, hidden), 2)
-        hidden = self.input2hidden(combined)
+        hidden = torch.relu(self.input2hidden(combined))
         # Since it's encoder
         # We are not concerened about output
         # output = self.input2output(combined)
@@ -72,6 +74,7 @@ class RNNClassifier(nn.Module):
         )
 
     def forward(self, batch):
+        # breakpoint()
         prem_embed = self.embed(batch.premise)
         hypo_embed = self.embed(batch.hypothesis)
         premise = self.encoder(prem_embed)
