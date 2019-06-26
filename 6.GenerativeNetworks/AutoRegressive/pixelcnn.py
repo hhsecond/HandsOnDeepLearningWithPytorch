@@ -89,8 +89,7 @@ for epoch in range(25):
                     for j in range(28):
                         # TODO: put TQDM
                         out = net(sample)
-                        probs = F.softmax(out[:, :, i, j])
-                        sample[:, :, i, j] = torch.multinomial(
-                            probs, 1).float() / 255.
-            utils.save_image(
-                sample, 'sample_{:02d}.png'.format(epoch), nrow=12, padding=0)
+                        # probability assignment for values in the range [0, 255]
+                        probs = F.softmax(out[:, :, i, j], dim=1)
+                        sample[:, :, i, j] = torch.multinomial(probs, 1).float() / 255.
+            utils.save_image(sample, 'sample_{:02d}.png'.format(epoch), nrow=12, padding=0)
