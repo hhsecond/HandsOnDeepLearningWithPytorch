@@ -20,6 +20,24 @@ def bundle(lstm_iter):
     return torch.cat(lstm_iter, 0).chunk(2, 1)
 
 
+class Bottle(nn.Module):
+
+    def forward(self, input):
+        if len(input.size()) <= 2:
+            return super(Bottle, self).forward(input)
+        size = input.size()[:2]
+        out = super(Bottle, self).forward(input.view(size[0] * size[1], -1))
+        return out.view(*size, -1)
+
+
+class Linear(Bottle, nn.Linear):
+    pass
+
+
+class BatchNorm(Bottle, nn.BatchNorm1d):
+    pass
+
+
 def unbundle(state):
     if state is None:
         return itertools.repeat(None)
@@ -142,8 +160,8 @@ class SNLIClassifier(nn.Module):
         super().__init__()
         self.config = config
         self.embed = nn.Embedding(config.n_embed, config.d_embed)
-        self.projection = nn.Linear(config.d_embed, config.d_proj)
-        self.embed_bn = nn.BatchNorm1d(config.d_proj)
+        self.projection = Linear(config.d_embed, config.d_proj)
+        self.embed_bn = BatchNorm(config.d_proj)
         self.embed_dropout = nn.Dropout(p=config.embed_dropout)
         self.encoder = SPINN(config)
         feat_in_size = config.d_hidden * (
@@ -161,8 +179,8 @@ class SNLIClassifier(nn.Module):
         self.out = nn.Sequential(*mlp)
 
     def forward(self, batch):
-        prem_embed = self.embed(batch.premise)
-        hypo_embed = self.embed(batch.hypothesis)
+        prem_embed = self.projection(self.embed(batch.premise))
+        hypo_embed = self.projection(self.embed(batch.hypothesis))
         prem_embed = self.embed_dropout(self.embed_bn(prem_embed))
         hypo_embed = self.embed_dropout(self.embed_bn(hypo_embed))
         if hasattr(batch, 'premise_transitions'):

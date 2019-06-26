@@ -18,10 +18,14 @@ class Config:
 
 
 config = Config()
+
+transitions = datasets.nli.ShiftReduceField()
+
+# inputs = datasets.nli.ParsedTextField(lower=True)
 inputs = data.Field(lower=True)
 answers = data.Field(sequential=False)
 
-train, dev, test = datasets.SNLI.splits(inputs, answers)
+train, dev, test = datasets.SNLI.splits(inputs, answers, transitions)
 
 USERHOME = str(Path.home())
 vector_cache = os.path.join(USERHOME, '.vector_cache/glove.6B.300d.txt.pt')
@@ -31,7 +35,7 @@ n_layers = 1
 birnn = False
 lr = 0.001
 epochs = 50
-eval_every = 10
+eval_every = 500
 log_every = 4
 embedding_dim = 300
 projection_dim = 600
@@ -116,10 +120,10 @@ for epoch in range(epochs):
             dev_acc = 100. * n_dev_correct / len(dev)
             print(dev_log_template.format(
                 time.time() - start, epoch, iterations, 1 + batch_idx, len(train_iter),
-                100. * (1 + batch_idx) / len(train_iter), loss.data[0], dev_loss.data[0],
+                100. * (1 + batch_idx) / len(train_iter), loss.item(), dev_loss.item(),
                 train_acc, dev_acc))
         elif iterations % log_every == 0:
             print(log_template.format(
                 time.time() - start, epoch, iterations, 1 + batch_idx, len(train_iter),
-                100. * (1 + batch_idx) / len(train_iter), loss.data[0], ' ' * 8,
+                100. * (1 + batch_idx) / len(train_iter), loss.item(), ' ' * 8,
                 n_correct / n_total * 100, ' ' * 12))
