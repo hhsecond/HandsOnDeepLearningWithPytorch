@@ -1,5 +1,7 @@
 import time
 import sys
+import os
+import glob
 import datetime
 import random
 import itertools
@@ -7,12 +9,38 @@ import itertools
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.utils.data import DataLoader
+from torch.utils.data import Dataset
+import torchvision.transforms as transforms
 import numpy as np
 import visdom
 from PIL import Image
+from util import get_args
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+
+class ImageDataset(Dataset):
+    def __init__(self, root, transforms_=None, unaligned=False, mode='train'):
+        self.transform = transforms.Compose(transforms_)
+        self.unaligned = unaligned
+
+        self.files_A = sorted(glob.glob(os.path.join(root, '%sA' % mode) + '/*.*'))
+        self.files_B = sorted(glob.glob(os.path.join(root, '%sB' % mode) + '/*.*'))
+
+    def __getitem__(self, index):
+        item_A = self.transform(Image.open(self.files_A[index % len(self.files_A)]))
+
+        if self.unaligned:
+            item_B = self.transform(
+                Image.open(self.files_B[random.randint(0, len(self.files_B) - 1)]))
+        else:
+            item_B = self.transform(Image.open(self.files_B[index % len(self.files_B)]))
+        return {'A': item_A, 'B': item_B}
+
+    def __len__(self):
+        return max(len(self.files_A), len(self.files_B))
 
 
 class ResidualBlock(nn.Module):
@@ -226,6 +254,8 @@ def weights_init_normal(m):
         torch.nn.init.constant(m.bias.data, 0.0)
 
 
+opt = get_args()
+
 # Networks
 netG_A2B = Generator(opt.input_nc, opt.output_nc)
 netG_B2A = Generator(opt.output_nc, opt.input_nc)
@@ -283,6 +313,7 @@ dataloader = DataLoader(ImageDataset(opt.dataroot, transforms_=transforms_, unal
 # Loss plot
 logger = Logger(opt.n_epochs, len(dataloader))
 ###################################
+
 
 ###### Training ######
 for epoch in range(opt.epoch, opt.n_epochs):
